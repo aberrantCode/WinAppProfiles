@@ -15,12 +15,16 @@ using WinAppProfiles.UI.ViewModels;
 using WinAppProfiles.UI.Views;
 using WinAppProfiles.UI.Theming;
 using Microsoft.Extensions.Logging; // Added this using statement
+using System.Threading; // Added for Mutex
 
 namespace WinAppProfiles.UI;
 
 public partial class App : System.Windows.Application
 {
     private IHost? _host;
+    private const string MutexName = "WinAppProfilesSingleInstanceMutex"; // Unique name for the mutex
+    private Mutex? _mutex;
+    private bool _isFirstInstance;
 
     public App()
     {
@@ -31,6 +35,20 @@ public partial class App : System.Windows.Application
 
     protected override async void OnStartup(StartupEventArgs e)
     {
+        _mutex = new Mutex(true, MutexName, out _isFirstInstance);
+
+        if (!_isFirstInstance)
+        {
+            // Another instance is already running
+            System.Windows.MessageBox.Show(
+                "WinAppProfiles is already running.",
+                "Application Already Running",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information);
+            Shutdown(); // Exit this new instance
+            return;
+        }
+
         try
         {
             base.OnStartup(e);
@@ -135,6 +153,12 @@ public partial class App : System.Windows.Application
         {
             await _host.StopAsync();
             _host.Dispose();
+        }
+
+        if (_isFirstInstance && _mutex is not null)
+        {
+            _mutex.ReleaseMutex();
+            _mutex.Dispose();
         }
 
         Log.CloseAndFlush();

@@ -37,22 +37,9 @@
             <Setter Property="BorderBrush" Value="{DynamicResource Theme.BorderBrush}" />
         </Style>
 
-        <Style TargetType="ComboBox">
-            <Setter Property="Background" Value="{DynamicResource Theme.ControlBackgroundBrush}" />
-            <Setter Property="Foreground" Value="{DynamicResource Theme.ForegroundBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource Theme.BorderBrush}" />
-        </Style>
 
-        <Style TargetType="ComboBoxItem">
-            <Setter Property="Background" Value="{DynamicResource Theme.ControlBackgroundBrush}" />
-            <Setter Property="Foreground" Value="{DynamicResource Theme.ForegroundBrush}" />
-            <Style.Triggers>
-                <Trigger Property="IsHighlighted" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource Theme.AccentBrush}" />
-                    <Setter Property="Foreground" Value="White" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
+
+
 
         <Style TargetType="Button">
             <Setter Property="Background" Value="{DynamicResource Theme.ControlBackgroundBrush}" />
@@ -162,6 +149,7 @@
                       IsReadOnly="{Binding IsAdvancedMode, Converter={StaticResource BooleanInverterConverter}}"
                       SelectionChanged="ProfileItemsDataGrid_SelectionChanged">
                 <DataGrid.Columns>
+                    <DataGridTextColumn Header="Target" Binding="{Binding DisplayName}" Width="2*" />
                     <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2*" />
                     <DataGridTextColumn Header="Type" Binding="{Binding TargetType}" Width="*" />
                     <DataGridTextColumn Header="Current State" Binding="{Binding CurrentState}" Width="*" />
@@ -212,6 +200,7 @@
                           SelectionChanged="NeedsReviewGrid_SelectionChanged"
                           MouseDoubleClick="NeedsReviewGrid_MouseDoubleClick">
                     <DataGrid.Columns>
+                        <DataGridTextColumn Header="Target" Binding="{Binding DisplayName}" Width="2*" />
                         <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2*" />
                         <DataGridTextColumn Header="Type" Binding="{Binding TargetType}" Width="*" />
                         <DataGridTextColumn Header="Current State" Binding="{Binding CurrentState}" Width="*" />
