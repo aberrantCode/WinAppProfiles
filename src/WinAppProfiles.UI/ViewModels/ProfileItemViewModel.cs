@@ -19,7 +19,6 @@ public sealed class ProfileItemViewModel : ObservableObject
         _model = model;
         _stateController = stateController;
         _logger = logger;
-        _ = UpdateCurrentStateAsync(); // Asynchronously update current state on creation
     }
 
     // Expose properties from the underlying ProfileItem model

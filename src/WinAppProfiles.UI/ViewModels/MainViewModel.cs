@@ -326,6 +326,7 @@ public sealed class MainViewModel : ObservableObject
             NeedsReviewItems.Add(new ProfileItemViewModel(item, _stateController, _profileItemViewModelLogger));
         }
 
+        await UpdateAllNeedsReviewStatesAsync(); // Await all state updates
         NeedsReviewView.Refresh();
     }
 
@@ -510,5 +511,11 @@ public sealed class MainViewModel : ObservableObject
         var settingsWindow = new Views.SettingsWindow(_settingsViewModel);
         settingsWindow.ShowDialog();
         return Task.CompletedTask;
+    }
+
+    private async Task UpdateAllNeedsReviewStatesAsync()
+    {
+        var tasks = NeedsReviewItems.Select(item => item.UpdateCurrentStateAsync()).ToList();
+        await Task.WhenAll(tasks);
     }
 }
