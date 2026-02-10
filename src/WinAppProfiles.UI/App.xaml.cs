@@ -16,6 +16,7 @@ using WinAppProfiles.UI.Views;
 using WinAppProfiles.UI.Theming;
 using Microsoft.Extensions.Logging; // Added this using statement
 using System.Threading; // Added for Mutex
+using System.Runtime.InteropServices; // Added for P/Invoke
 
 namespace WinAppProfiles.UI;
 
@@ -25,6 +26,17 @@ public partial class App : System.Windows.Application
     private const string MutexName = "WinAppProfilesSingleInstanceMutex"; // Unique name for the mutex
     private Mutex? _mutex;
     private bool _isFirstInstance;
+
+    [DllImport("user32.dll")]
+    private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    private static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr FindWindow(string? lpClassName, string lpWindowName);
+
+    private const int SW_RESTORE = 9; // Restores a minimized window
 
     public App()
     {
@@ -39,12 +51,13 @@ public partial class App : System.Windows.Application
 
         if (!_isFirstInstance)
         {
-            // Another instance is already running
-            System.Windows.MessageBox.Show(
-                "WinAppProfiles is already running.",
-                "Application Already Running",
-                System.Windows.MessageBoxButton.OK,
-                System.Windows.MessageBoxImage.Information);
+            // Another instance is already running, bring it to the foreground
+            IntPtr hWnd = FindWindow(null, "WinAppProfiles"); // Find the existing window by title
+            if (hWnd != IntPtr.Zero)
+            {
+                ShowWindowAsync(hWnd, SW_RESTORE); // Restore it if minimized
+                SetForegroundWindow(hWnd); // Bring it to the foreground
+            }
             Shutdown(); // Exit this new instance
             return;
         }
