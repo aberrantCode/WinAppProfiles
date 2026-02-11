@@ -58,11 +58,6 @@ public sealed class DbInitializer
                 error_message TEXT NULL,
                 FOREIGN KEY(run_id) REFERENCES apply_runs(id)
             );
-
-            CREATE TABLE IF NOT EXISTS app_settings (
-                key TEXT PRIMARY KEY,
-                value TEXT NOT NULL
-            );
             """);
     }
 }

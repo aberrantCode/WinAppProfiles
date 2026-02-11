@@ -7,7 +7,7 @@ public sealed class AppSettings
     public bool EnableDarkMode { get; set; } = false;
     public bool MinimizeOnLaunch { get; set; } = false;
     public bool MinimizeToTrayOnClose { get; set; } = false;
-    public InterfaceType DefaultInterfaceType { get; set; } = InterfaceType.Default;
+    public InterfaceType DefaultInterfaceType { get; set; } = InterfaceType.Tabbed;
 
     public AppSettings Clone()
     {
