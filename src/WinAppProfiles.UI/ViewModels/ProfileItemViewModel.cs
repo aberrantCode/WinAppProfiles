@@ -42,6 +42,8 @@ public sealed class ProfileItemViewModel : ObservableObject
                 OnPropertyChanged(nameof(IsIgnored));
                 OnPropertyChanged(nameof(IsRunning));
                 OnPropertyChanged(nameof(IsStopped));
+                OnPropertyChanged(nameof(IsDesiredRunning)); // Notify new properties
+                OnPropertyChanged(nameof(IsDesiredStopped)); // Notify new properties
             }
         }
     }
@@ -73,6 +75,33 @@ public sealed class ProfileItemViewModel : ObservableObject
     public bool IsIgnored => DesiredState == Core.Models.DesiredState.Ignore;
     public bool IsRunning => DesiredState == Core.Models.DesiredState.Running;
     public bool IsStopped => DesiredState == Core.Models.DesiredState.Stopped;
+
+    // New properties for toggle switch in CardView
+    public bool IsDesiredRunning
+    {
+        get => DesiredState == DesiredState.Running;
+        set
+        {
+            if (value && DesiredState != DesiredState.Running)
+            {
+                DesiredState = DesiredState.Running;
+                OnPropertyChanged();
+            }
+            else if (!value && DesiredState == DesiredState.Running)
+            {
+                // If unchecked and was running, set to Stopped (default for toggle off)
+                DesiredState = DesiredState.Stopped;
+                OnPropertyChanged();
+            }
+            // If already not running and unchecked, do nothing, or set to Ignore.
+            // For a simple toggle, running/stopped seems most intuitive.
+        }
+    }
+
+    public bool IsDesiredStopped // Read-only property reflecting if the desired state is stopped
+    {
+        get => DesiredState == DesiredState.Stopped;
+    }
 
     public ProfileItem GetModel() => _model;
 

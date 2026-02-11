@@ -1,0 +1,112 @@
+<Window x:Class="WinAppProfiles.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="WinAppProfiles" Height="650" Width="1100"
+        Background="#1E1E1E" TextElement.Foreground="#E0E0E0">
+    <Window.Resources>
+        <Style x:Key="StatusBadgeStyle" TargetType="Border">
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding CurrentState}" Value="Running">
+                    <Setter Property="Background" Value="#28a745"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding CurrentState}" Value="Stopped">
+                    <Setter Property="Background" Value="#dc3545"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding CurrentState}" Value="Unknown">
+                    <Setter Property="Background" Value="#6c757d"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="240"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Background="#252526" BorderBrush="#3E3E42" BorderThickness="0,0,1,0">
+            <DockPanel>
+                <Button DockPanel.Dock="Bottom" Margin="10" Padding="10,8" Background="Transparent" BorderBrush="#3E3E42" Foreground="#E0E0E0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="+" Margin="0,0,8,0"/>
+                        <TextBlock Text="New Profile..."/>
+                    </StackPanel>
+                </Button>
+                <ListView Background="Transparent" BorderThickness="0" Margin="0,10">
+                    <ListViewItem IsSelected="True" Padding="10,8">Development</ListViewItem>
+                    <ListViewItem Padding="10,8">Gaming</ListViewItem>
+                    <ListViewItem Padding="10,8">Streaming</ListViewItem>
+                </ListView>
+            </DockPanel>
+        </Border>
+
+        <DockPanel Grid.Column="1">
+            <Border DockPanel.Dock="Top" Padding="15" BorderBrush="#3E3E42" BorderThickness="0,0,0,1">
+                <DockPanel>
+                    <TextBlock Text="Development" FontSize="22" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="✓ Apply Profile" Margin="0,0,10,0" Padding="12,6" Background="#0078D4" BorderThickness="0" Foreground="White"/>
+                        <Button Content="Create Profile" Margin="0,0,10,0" Padding="12,6" Background="#3E3E42" BorderThickness="0" Foreground="White"/>
+                        <Button Content="Discover New Items" Margin="0,0,10,0" Padding="12,6" Background="#3E3E42" BorderThickness="0" Foreground="White"/>
+                        <Button Content="Settings" Padding="12,6" Background="Transparent" BorderThickness="0" Foreground="White"/>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <StatusBar DockPanel.Dock="Bottom" Background="#0078D4" Foreground="White" Padding="10,5">
+                <StatusBarItem>
+                    <TextBlock Text="Ready. Profile 'Development' loaded."/>
+                </StatusBarItem>
+                <StatusBarItem HorizontalAlignment="Right">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Dark Mode" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <CheckBox IsChecked="True" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </StatusBarItem>
+            </StatusBar>
+
+            <DataGrid Margin="15" Background="#2D2D30" BorderBrush="#3E3E42" RowBackground="#2D2D30" AlternatingRowBackground="#333337"
+                      HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#3E3E42"
+                      AutoGenerateColumns="False" CanUserAddRows="False">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="Icon" Width="50">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Rectangle Width="24" Height="24" Fill="#555" Margin="5"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2*" Foreground="#E0E0E0"/>
+                    <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="1*" Foreground="#E0E0E0"/>
+                    <DataGridTemplateColumn Header="Current State" Width="120">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource StatusBadgeStyle}">
+                                    <TextBlock Text="{Binding CurrentState}" Foreground="White" FontWeight="SemiBold"/>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Desired State" Width="150">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <ComboBox SelectedItem="{Binding DesiredState, Mode=TwoWay}" Background="#3E3E42" Foreground="#E0E0E0" BorderThickness="0">
+                                    <ComboBoxItem>Running</ComboBoxItem>
+                                    <ComboBoxItem>Stopped</ComboBoxItem>
+                                    <ComboBoxItem>Ignore</ComboBoxItem>
+                                </ComboBox>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </DockPanel>
+    </Grid>
+</Window>

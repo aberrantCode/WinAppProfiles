@@ -39,6 +39,8 @@ public sealed class MainViewModel : ObservableObject
     private readonly ObservableCollection<ProfileItemViewModel> _selectedProfileItemsForBulkApply = [];
     private readonly AsyncRelayCommand _openSettingsCommand; // Declare the command
 
+    public ICommand PromoteNeedsReviewItemCommand { get; }
+
     public MainViewModel(IProfileService profileService, SettingsViewModel settingsViewModel, IStateController stateController, ILoggerFactory loggerFactory)
     {
         _profileService = profileService;
@@ -75,9 +77,15 @@ public sealed class MainViewModel : ObservableObject
         AddSelectedNeedsReviewCommand = _addSelectedNeedsReviewCommand;
         ApplyBulkDesiredStateCommand = _applyBulkDesiredStateCommand;
         OpenSettingsCommand = _openSettingsCommand;
+        PromoteNeedsReviewItemCommand = new RelayCommand<ProfileItemViewModel>(PromoteNeedsReviewItem); // Initialize new command
 
         NeedsReviewView = CollectionViewSource.GetDefaultView(NeedsReviewItems);
         NeedsReviewView.Filter = NeedsReviewFilter;
+
+        CardApplicationsView = CollectionViewSource.GetDefaultView(SelectedProfileItems);
+        CardApplicationsView.Filter = CardApplicationFilter;
+        CardServicesView = CollectionViewSource.GetDefaultView(SelectedProfileItems);
+        CardServicesView.Filter = CardServiceFilter;
 
         _ = LoadAsync();
     }
@@ -87,6 +95,8 @@ public sealed class MainViewModel : ObservableObject
     public ObservableCollection<ProfileItemViewModel> NeedsReviewItems { get; } = [];
     public ObservableCollection<ProfileItemViewModel> SelectedProfileItemsForBulkApply => _selectedProfileItemsForBulkApply;
     public ICollectionView NeedsReviewView { get; }
+    public ICollectionView CardApplicationsView { get; } // New
+    public ICollectionView CardServicesView { get; }     // New
     public IReadOnlyList<string> NeedsReviewTypeFilters { get; } = ["All", "Applications", "Services"];
 
     public ICommand RefreshCommand { get; }
@@ -183,6 +193,8 @@ public sealed class MainViewModel : ObservableObject
         {
             SetProperty(ref _needsReviewSearchText, value);
             NeedsReviewView.Refresh();
+            CardApplicationsView.Refresh();
+            CardServicesView.Refresh();
         }
     }
 
@@ -193,6 +205,8 @@ public sealed class MainViewModel : ObservableObject
         {
             SetProperty(ref _selectedNeedsReviewTypeFilter, value);
             NeedsReviewView.Refresh();
+            CardApplicationsView.Refresh();
+            CardServicesView.Refresh();
         }
     }
 
@@ -310,6 +324,8 @@ public sealed class MainViewModel : ObservableObject
         {
             SelectedProfileItems.Add(new ProfileItemViewModel(item, _stateController, _profileItemViewModelLogger));
         }
+        CardApplicationsView.Refresh();
+        CardServicesView.Refresh();
     }
 
     private async Task LoadNeedsReviewAsync()
@@ -328,6 +344,16 @@ public sealed class MainViewModel : ObservableObject
 
         await UpdateAllNeedsReviewStatesAsync(); // Await all state updates
         NeedsReviewView.Refresh();
+    }
+
+    private bool CardApplicationFilter(object candidate)
+    {
+        return candidate is ProfileItemViewModel item && item.TargetType == TargetType.Application;
+    }
+
+    private bool CardServiceFilter(object candidate)
+    {
+        return candidate is ProfileItemViewModel item && item.TargetType == TargetType.Service;
     }
 
     public void PromoteNeedsReviewItem(ProfileItemViewModel? item)

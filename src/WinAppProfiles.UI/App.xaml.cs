@@ -94,6 +94,8 @@ public partial class App : System.Windows.Application
                     services.AddSingleton<MainViewModel>(s => new MainViewModel(s.GetRequiredService<IProfileService>(), s.GetRequiredService<SettingsViewModel>(), s.GetRequiredService<IStateController>(), s.GetRequiredService<ILoggerFactory>()));
                     services.AddSingleton<MainWindow>(s => new MainWindow(s.GetRequiredService<MainViewModel>(), s.GetRequiredService<IAppSettingsRepository>()));
                     services.AddSingleton<SettingsViewModel>();
+                    services.AddTransient<TabbedWindowMock>();
+                    services.AddTransient<CardWindowMock>(); // Add CardWindowMock
                 })
                 .Build();
 
@@ -122,7 +124,21 @@ public partial class App : System.Windows.Application
 
             await SeedDefaultProfileAsync(profileService);
 
-            var window = _host.Services.GetRequiredService<MainWindow>();
+            Window window;
+            switch (appSettings.DefaultInterfaceType)
+            {
+                case InterfaceType.Tabbed:
+                    window = _host.Services.GetRequiredService<TabbedWindowMock>();
+                    break;
+                case InterfaceType.Cards:
+                    window = _host.Services.GetRequiredService<CardWindowMock>();
+                    break;
+                case InterfaceType.Default:
+                default:
+                    window = _host.Services.GetRequiredService<MainWindow>();
+                    break;
+            }
+            
             window.Show();
 
             // Apply Default Profile and Auto-apply setting
