@@ -8,15 +8,18 @@ public sealed class ProfileService : IProfileService
     private readonly IProfileRepository _profileRepository;
     private readonly IStateController _stateController;
     private readonly IDiscoveryService _discoveryService;
+    private readonly IBatteryStatusProvider _batteryStatusProvider;
 
     public ProfileService(
         IProfileRepository profileRepository,
         IStateController stateController,
-        IDiscoveryService discoveryService)
+        IDiscoveryService discoveryService,
+        IBatteryStatusProvider batteryStatusProvider)
     {
         _profileRepository = profileRepository;
         _stateController = stateController;
         _discoveryService = discoveryService;
+        _batteryStatusProvider = batteryStatusProvider;
     }
 
     public Task<Profile> CreateProfileAsync(Profile profile, CancellationToken cancellationToken = default)
@@ -49,6 +52,11 @@ public sealed class ProfileService : IProfileService
                 continue;
             }
 
+            if (item.OnlyApplyOnBattery && !_batteryStatusProvider.IsOnBattery())
+            {
+                continue;
+            }
+
             var entry = new ApplyResultItem
             {
                 ProfileItemId = item.Id,
@@ -62,7 +70,7 @@ public sealed class ProfileService : IProfileService
                     item.TargetType switch
                     {
                         TargetType.Application => await _stateController.EnsureProcessStateAsync(
-                            new ProcessTarget(item.DisplayName, item.ProcessName ?? string.Empty, item.ExecutablePath),
+                            new ProcessTarget(item.DisplayName, item.ProcessName ?? string.Empty, item.ExecutablePath, item.StartupDelaySeconds, item.ForceMinimizedOnStart),
                             item.DesiredState,
                             cancellationToken),
                         TargetType.Service => await _stateController.EnsureServiceStateAsync(
@@ -99,6 +107,9 @@ public sealed class ProfileService : IProfileService
 
         return result;
     }
+
+    public Task DeleteProfileAsync(Guid profileId, CancellationToken cancellationToken = default)
+        => _profileRepository.DeleteProfileAsync(profileId, cancellationToken);
 
     public async Task<IReadOnlyList<ProfileItem>> GetNeedsReviewAsync(Guid profileId, CancellationToken cancellationToken = default)
     {

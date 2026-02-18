@@ -72,19 +72,137 @@
                            Style="{StaticResource HeaderText}"
                            VerticalAlignment="Center"
                            Margin="0,0,15,0"/>
-                <ComboBox Width="150"
-                          VerticalAlignment="Center"
-                          Style="{StaticResource ProfileComboBoxStyle}"
-                          ItemContainerStyle="{StaticResource ProfileComboBoxItemStyle}"
-                          ItemsSource="{Binding Profiles}"
-                          SelectedItem="{Binding SelectedProfile}"
-                          DisplayMemberPath="Name"/>
+
+                <!-- Normal state: ComboBox + action buttons -->
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsRenamingProfile}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <ComboBox Width="150"
+                              VerticalAlignment="Center"
+                              Style="{StaticResource ProfileComboBoxStyle}"
+                              ItemContainerStyle="{StaticResource ProfileComboBoxItemStyle}"
+                              ItemsSource="{Binding Profiles}"
+                              SelectedItem="{Binding SelectedProfile}"
+                              DisplayMemberPath="Name"/>
+                    <!-- Rename profile button -->
+                    <Button Content="✏"
+                            FontSize="13"
+                            Width="30"
+                            Height="30"
+                            Margin="6,0,0,0"
+                            VerticalAlignment="Center"
+                            Background="{StaticResource BackgroundTertiary}"
+                            Foreground="{StaticResource TextSecondary}"
+                            BorderThickness="0"
+                            Cursor="Hand"
+                            Command="{Binding BeginRenameProfileCommand}"
+                            ToolTip="Rename selected profile">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}" CornerRadius="15" BorderThickness="0">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource BackgroundQuaternary}"/>
+                                        <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                                    </Trigger>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter Property="Opacity" Value="0.4"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </StackPanel>
+
+                <!-- Rename state: TextBox + Save + Cancel -->
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsRenamingProfile}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <TextBox Text="{Binding EditProfileName, UpdateSourceTrigger=PropertyChanged}"
+                             Width="180" VerticalAlignment="Center"
+                             Padding="8,6"
+                             Background="{StaticResource BackgroundQuaternary}"
+                             Foreground="{StaticResource TextPrimary}"
+                             CaretBrush="{StaticResource TextPrimary}"
+                             BorderThickness="0" FontSize="13"/>
+                    <Button Content="Save"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Command="{Binding SaveProfileRenameCommand}"
+                            Margin="6,0,0,0" Padding="10,6" FontSize="12" VerticalAlignment="Center"/>
+                    <Button Content="Cancel"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Command="{Binding CancelProfileRenameCommand}"
+                            Margin="6,0,0,0" Padding="10,6" FontSize="12" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Delete profile button — only enabled when a real profile is selected -->
+                <Button Content="🗑"
+                        FontSize="14"
+                        Width="36"
+                        Height="36"
+                        Margin="6,0,0,0"
+                        VerticalAlignment="Center"
+                        Background="{StaticResource BackgroundTertiary}"
+                        Foreground="{StaticResource TextSecondary}"
+                        BorderThickness="0"
+                        Cursor="Hand"
+                        Command="{Binding DeleteProfileCommand}"
+                        ToolTip="Delete selected profile">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}"
+                                                CornerRadius="18"
+                                                BorderThickness="0">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#4D2020"/>
+                                    <Setter Property="Foreground" Value="#FF6B6B"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.4"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
                 <Button Content="+"
                         FontSize="20"
                         FontWeight="Bold"
                         Width="36"
                         Height="36"
-                        Margin="8,0,0,0"
+                        Margin="6,0,0,0"
                         VerticalAlignment="Center"
                         Background="{StaticResource AccentPrimary}"
                         Foreground="White"

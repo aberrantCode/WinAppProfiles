@@ -45,6 +45,10 @@ public sealed class MainViewModel : ObservableObject
     private readonly ObservableCollection<ProfileItemViewModel> _selectedNeedsReviewItems = [];
     private readonly ObservableCollection<ProfileItemViewModel> _selectedProfileItemsForBulkApply = [];
     private readonly AsyncRelayCommand _openSettingsCommand; // Declare the command
+    private readonly AsyncRelayCommand _deleteProfileCommand;
+    private readonly AsyncRelayCommand _saveProfileRenameCommand;
+    private bool _isRenamingProfile;
+    private string _editProfileName = string.Empty;
     private ProfileItemViewModel? _activeSettingsItem;
 
     public ICommand PromoteNeedsReviewItemCommand { get; }
@@ -55,6 +59,10 @@ public sealed class MainViewModel : ObservableObject
     public ICommand BrowseForItemIconCommand { get; }
     public ICommand ResetItemIconCommand { get; }
     public ICommand BrowseForExecutableCommand { get; }
+    public ICommand DeleteProfileCommand { get; }
+    public ICommand BeginRenameProfileCommand { get; }
+    public ICommand SaveProfileRenameCommand { get; }
+    public ICommand CancelProfileRenameCommand { get; }
 
     public ProfileItemViewModel? ActiveSettingsItem
     {
@@ -119,6 +127,19 @@ public sealed class MainViewModel : ObservableObject
         BrowseForItemIconCommand = new RelayCommand<ProfileItemViewModel>(BrowseForItemIcon);
         ResetItemIconCommand = new RelayCommand<ProfileItemViewModel>(ResetItemIcon);
         BrowseForExecutableCommand = new RelayCommand<ProfileItemViewModel>(BrowseForExecutable);
+        _deleteProfileCommand = new AsyncRelayCommand(DeleteSelectedProfileAsync, () => SelectedProfile is not null && SelectedProfile.Id != Guid.Empty);
+        _deleteProfileCommand.ErrorCallback = ex => StatusMessage = $"Error: {ex.Message}";
+        DeleteProfileCommand = _deleteProfileCommand;
+
+        _saveProfileRenameCommand = new AsyncRelayCommand(SaveProfileRenameAsync, () => !string.IsNullOrWhiteSpace(EditProfileName) && SelectedProfile is not null && SelectedProfile.Id != Guid.Empty);
+        _saveProfileRenameCommand.ErrorCallback = ex => StatusMessage = $"Error: {ex.Message}";
+        BeginRenameProfileCommand = new RelayCommand(() =>
+        {
+            EditProfileName = SelectedProfile?.Name ?? string.Empty;
+            IsRenamingProfile = true;
+        }, () => SelectedProfile is not null && SelectedProfile.Id != Guid.Empty);
+        SaveProfileRenameCommand = _saveProfileRenameCommand;
+        CancelProfileRenameCommand = new RelayCommand(() => IsRenamingProfile = false);
 
         NeedsReviewView = CollectionViewSource.GetDefaultView(NeedsReviewItems);
         NeedsReviewView.Filter = NeedsReviewFilter;
@@ -168,6 +189,7 @@ public sealed class MainViewModel : ObservableObject
             _saveCommand.NotifyCanExecuteChanged();
             _addSelectedNeedsReviewCommand.NotifyCanExecuteChanged();
             _applyBulkDesiredStateCommand.NotifyCanExecuteChanged();
+            _deleteProfileCommand.NotifyCanExecuteChanged();
             RefreshSelectedProfileItems();
             _ = LoadNeedsReviewAsync();
         }
@@ -216,6 +238,22 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
+    public bool IsRenamingProfile
+    {
+        get => _isRenamingProfile;
+        set => SetProperty(ref _isRenamingProfile, value);
+    }
+
+    public string EditProfileName
+    {
+        get => _editProfileName;
+        set
+        {
+            SetProperty(ref _editProfileName, value);
+            _saveProfileRenameCommand.NotifyCanExecuteChanged();
+        }
+    }
+
     public string NewProfileName
     {
         get => _newProfileName;
@@ -241,8 +279,6 @@ public sealed class MainViewModel : ObservableObject
         {
             SetProperty(ref _needsReviewSearchText, value);
             NeedsReviewView.Refresh();
-            CardApplicationsView.Refresh();
-            CardServicesView.Refresh();
         }
     }
 
@@ -253,8 +289,6 @@ public sealed class MainViewModel : ObservableObject
         {
             SetProperty(ref _selectedNeedsReviewTypeFilter, value);
             NeedsReviewView.Refresh();
-            CardApplicationsView.Refresh();
-            CardServicesView.Refresh();
         }
     }
 
@@ -342,6 +376,35 @@ public sealed class MainViewModel : ObservableObject
         NewProfileName = string.Empty;
         IsCreatingProfile = false;
         StatusMessage = $"Profile '{name}' created.";
+    }
+
+    private async Task DeleteSelectedProfileAsync()
+    {
+        if (SelectedProfile is null || SelectedProfile.Id == Guid.Empty) return;
+        var name = SelectedProfile.Name;
+        await _profileService.DeleteProfileAsync(SelectedProfile.Id);
+        Profiles.Remove(SelectedProfile);
+        SelectedProfile = Profiles.FirstOrDefault(p => p.Id != Guid.Empty);
+        StatusMessage = $"Profile '{name}' deleted.";
+    }
+
+    private async Task SaveProfileRenameAsync()
+    {
+        if (SelectedProfile is null || SelectedProfile.Id == Guid.Empty) return;
+        var trimmed = EditProfileName.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed)) return;
+
+        if (Profiles.Any(p => p.Id != SelectedProfile.Id && string.Equals(p.Name, trimmed, StringComparison.OrdinalIgnoreCase)))
+        {
+            StatusMessage = $"A profile named '{trimmed}' already exists.";
+            return;
+        }
+
+        SelectedProfile.Name = trimmed;
+        await _profileService.UpdateProfileAsync(SelectedProfile);
+        OnPropertyChanged(nameof(SelectedProfile));
+        IsRenamingProfile = false;
+        StatusMessage = $"Profile renamed to '{trimmed}'.";
     }
 
     private Task BeginCreateProfileAsync()

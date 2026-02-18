@@ -53,8 +53,10 @@ public sealed class ProfileServiceTests
             .ReturnsAsync((false, (DesiredState?)null, "SERVICE_ERROR", "Denied"));
 
         var discovery = new Mock<IDiscoveryService>();
+        var battery = new Mock<IBatteryStatusProvider>();
+        battery.Setup(b => b.IsOnBattery()).Returns(false);
 
-        var service = new ProfileService(repository.Object, stateController.Object, discovery.Object);
+        var service = new ProfileService(repository.Object, stateController.Object, discovery.Object, battery.Object);
         var result = await service.ApplyProfileAsync(profileId);
 
         result.Success.Should().BeFalse();
@@ -113,8 +115,9 @@ public sealed class ProfileServiceTests
         discovery.Setup(x => x.ScanServicesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<ProfileItem>());
 
         var stateController = new Mock<IStateController>();
+        var battery = new Mock<IBatteryStatusProvider>();
 
-        var service = new ProfileService(repository.Object, stateController.Object, discovery.Object);
+        var service = new ProfileService(repository.Object, stateController.Object, discovery.Object, battery.Object);
         var needsReview = await service.GetNeedsReviewAsync(profileId);
 
         needsReview.Should().ContainSingle();

@@ -9,4 +9,5 @@ public interface IProfileService
     Task<IReadOnlyList<Profile>> GetProfilesAsync(CancellationToken cancellationToken = default);
     Task<ApplyResult> ApplyProfileAsync(Guid profileId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<ProfileItem>> GetNeedsReviewAsync(Guid profileId, CancellationToken cancellationToken = default);
+    Task DeleteProfileAsync(Guid profileId, CancellationToken cancellationToken = default);
 }

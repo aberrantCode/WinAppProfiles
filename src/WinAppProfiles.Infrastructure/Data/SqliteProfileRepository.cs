@@ -134,7 +134,12 @@ public sealed class SqliteProfileRepository : IProfileRepository
             """
             SELECT id, profile_id AS ProfileId, target_type AS TargetType, display_name AS DisplayName,
                    process_name AS ProcessName, executable_path AS ExecutablePath, service_name AS ServiceName,
-                   desired_state AS DesiredState, is_reviewed AS IsReviewed
+                   desired_state AS DesiredState, is_reviewed AS IsReviewed,
+                   startup_delay_seconds AS StartupDelaySeconds,
+                   only_apply_on_battery AS OnlyApplyOnBattery,
+                   force_minimized_on_start AS ForceMinimizedOnStart,
+                   custom_icon_path AS CustomIconPath,
+                   icon_index AS IconIndex
             FROM profile_items
             WHERE profile_id = @ProfileId;
             """,
@@ -221,6 +226,16 @@ public sealed class SqliteProfileRepository : IProfileRepository
             transaction.Rollback(); // Rollback on error
             throw; // Re-throw to propagate the error
         }
+    }
+
+    public async Task DeleteProfileAsync(Guid profileId, CancellationToken cancellationToken = default)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        await connection.ExecuteAsync(
+            "DELETE FROM profile_items WHERE profile_id = @Id;", new { Id = profileId.ToString() });
+        await connection.ExecuteAsync(
+            "DELETE FROM profiles WHERE id = @Id;", new { Id = profileId.ToString() });
+        _logger.LogInformation("Deleted profile {ProfileId}.", profileId);
     }
 
     private static Task<int> InsertProfileItemAsync(System.Data.IDbConnection connection, ProfileItem item)

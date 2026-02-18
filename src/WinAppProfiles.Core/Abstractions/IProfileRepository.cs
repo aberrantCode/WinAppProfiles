@@ -9,4 +9,5 @@ public interface IProfileRepository
     Task<IReadOnlyList<Profile>> GetProfilesAsync(CancellationToken cancellationToken = default);
     Task<Profile?> GetProfileByIdAsync(Guid profileId, CancellationToken cancellationToken = default);
     Task SaveApplyResultAsync(ApplyResult result, CancellationToken cancellationToken = default);
+    Task DeleteProfileAsync(Guid profileId, CancellationToken cancellationToken = default);
 }

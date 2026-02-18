@@ -53,10 +53,12 @@ public sealed class WindowsStateController : IStateController
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = target.ExecutablePath,
-                    UseShellExecute = true
+                    UseShellExecute = true,
+                    WindowStyle = target.ForceMinimizedOnStart ? ProcessWindowStyle.Minimized : ProcessWindowStyle.Normal
                 });
 
-                await Task.Delay(250, cancellationToken);
+                var delayMs = target.StartupDelaySeconds > 0 ? target.StartupDelaySeconds * 1000 : 250;
+                await Task.Delay(delayMs, cancellationToken);
                 return (true, DesiredState.Running, null, null);
             }
 

@@ -21,6 +21,7 @@ public static class DependencyInjection
         services.AddScoped<IProfileRepository, SqliteProfileRepository>();
         services.AddScoped<IStateController, WindowsStateController>();
         services.AddScoped<IDiscoveryService, WindowsDiscoveryService>();
+        services.AddSingleton<IBatteryStatusProvider, WindowsBatteryStatusProvider>();
         services.AddScoped<IProfileService, ProfileService>();
         services.AddScoped<IAppSettingsRepository, SqliteAppSettingsRepository>();
 
