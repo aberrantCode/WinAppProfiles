@@ -8,3 +8,10 @@ TestResults/
 *.db-shm
 *.db-wal
 logs/
+*.png
+!assets/icons/*.png
+!assets/mocks/*.png
+!assets/screenshots/*.png
+!assets/*.png
+*_wpftmp.csproj
+nul
