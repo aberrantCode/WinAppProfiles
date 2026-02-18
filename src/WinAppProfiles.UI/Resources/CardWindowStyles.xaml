@@ -110,9 +110,10 @@
                     <Setter Property="Height" Value="200"/>
                     <Setter Property="Opacity" Value="1"/>
                     <Style.Triggers>
-                        <!-- Dim the card if the item doesn't exist -->
+                        <!-- Dim the card and show tooltip if the item doesn't exist -->
                         <DataTrigger Binding="{Binding Exists}" Value="False">
                             <Setter Property="Opacity" Value="0.5"/>
+                            <Setter Property="ToolTip" Value="{Binding TargetPath, StringFormat='Not found: {0}'}"/>
                         </DataTrigger>
                         <!-- Set Tag when mouse is over the card -->
                         <Trigger Property="IsMouseOver" Value="True">

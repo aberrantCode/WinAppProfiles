@@ -16,11 +16,12 @@ public class MainViewModelTests
 {
     private readonly Mock<IProfileService> _mockProfileService;
     private readonly Mock<IStateController> _mockStateController;
+    private readonly Mock<IDiscoveryService> _mockDiscoveryService;
     private readonly Mock<ILoggerFactory> _mockLoggerFactory;
     private readonly Mock<ILogger<ProfileItemViewModel>> _mockProfileItemViewModelLogger;
     private readonly Mock<IAppSettingsRepository> _mockAppSettingsRepository;
     private readonly SettingsViewModel _settingsViewModel;
-    private readonly Mock<WinAppProfiles.UI.Services.IconCacheService> _mockIconCacheService;
+    private readonly WinAppProfiles.UI.Services.IconCacheService _iconCacheService;
     private readonly Mock<WinAppProfiles.UI.Services.IStatusMonitoringService> _mockStatusMonitoringService;
     private readonly MainViewModel _viewModel;
 
@@ -28,10 +29,11 @@ public class MainViewModelTests
     {
         _mockProfileService = new Mock<IProfileService>();
         _mockStateController = new Mock<IStateController>();
+        _mockDiscoveryService = new Mock<IDiscoveryService>();
         _mockLoggerFactory = new Mock<ILoggerFactory>();
         _mockProfileItemViewModelLogger = new Mock<ILogger<ProfileItemViewModel>>();
         _mockAppSettingsRepository = new Mock<IAppSettingsRepository>();
-        _mockIconCacheService = new Mock<WinAppProfiles.UI.Services.IconCacheService>();
+        _iconCacheService = new WinAppProfiles.UI.Services.IconCacheService(new WinAppProfiles.UI.Services.IconExtractionService());
         _mockStatusMonitoringService = new Mock<WinAppProfiles.UI.Services.IStatusMonitoringService>();
 
         _mockLoggerFactory.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(_mockProfileItemViewModelLogger.Object);
@@ -44,9 +46,45 @@ public class MainViewModelTests
             _mockProfileService.Object,
             _settingsViewModel,
             _mockStateController.Object,
+            _mockDiscoveryService.Object,
             _mockLoggerFactory.Object,
-            _mockIconCacheService.Object,
+            _iconCacheService,
             _mockStatusMonitoringService.Object);
+    }
+
+    [Fact]
+    public async Task ApplySelectedProfileAsync_WhenItemsFail_StatusMessageContainsFailedItemNames()
+    {
+        // Arrange
+        var profileId = Guid.NewGuid();
+        var itemId = Guid.NewGuid();
+        var profile = new Profile { Id = profileId, Name = "Dev", Items = [] };
+        _mockProfileService.Setup(s => s.GetProfilesAsync(default)).ReturnsAsync([profile]);
+        _mockProfileService.Setup(s => s.UpdateProfileAsync(It.IsAny<Profile>(), default)).ReturnsAsync(profile);
+
+        var failedResult = new ApplyResult
+        {
+            ProfileId = profileId,
+            Success = false,
+            Items =
+            [
+                new ApplyResultItem { ProfileItemId = itemId, Success = false, ErrorCode = "DENIED" }
+            ]
+        };
+        _mockProfileService.Setup(s => s.ApplyProfileAsync(profileId, default)).ReturnsAsync(failedResult);
+
+        await ((AsyncRelayCommand)_viewModel.RefreshCommand).ExecuteAsync(null);
+        _viewModel.SelectedProfile = profile;
+
+        var failingItem = new ProfileItem { Id = itemId, DisplayName = "SQL Server", TargetType = TargetType.Service, ServiceName = "MSSQLSERVER", DesiredState = DesiredState.Running };
+        _viewModel.SelectedProfileItems.Add(new ProfileItemViewModel(failingItem, _mockStateController.Object, _mockProfileItemViewModelLogger.Object));
+
+        // Act
+        await ((AsyncRelayCommand)_viewModel.ApplyCommand).ExecuteAsync(null);
+
+        // Assert
+        _viewModel.StatusMessage.Should().Contain("SQL Server");
+        _viewModel.StatusMessage.Should().Contain("1 failure");
     }
 
     [Fact]

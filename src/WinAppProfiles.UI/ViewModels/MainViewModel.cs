@@ -54,6 +54,7 @@ public sealed class MainViewModel : ObservableObject
     public ICommand RemoveProfileItemCommand { get; }
     public ICommand BrowseForItemIconCommand { get; }
     public ICommand ResetItemIconCommand { get; }
+    public ICommand BrowseForExecutableCommand { get; }
 
     public ProfileItemViewModel? ActiveSettingsItem
     {
@@ -117,6 +118,7 @@ public sealed class MainViewModel : ObservableObject
         RemoveProfileItemCommand = new RelayCommand<ProfileItemViewModel>(RemoveProfileItem);
         BrowseForItemIconCommand = new RelayCommand<ProfileItemViewModel>(BrowseForItemIcon);
         ResetItemIconCommand = new RelayCommand<ProfileItemViewModel>(ResetItemIcon);
+        BrowseForExecutableCommand = new RelayCommand<ProfileItemViewModel>(BrowseForExecutable);
 
         NeedsReviewView = CollectionViewSource.GetDefaultView(NeedsReviewItems);
         NeedsReviewView.Filter = NeedsReviewFilter;
@@ -287,11 +289,19 @@ public sealed class MainViewModel : ObservableObject
         await SaveSelectedProfileAsync();
 
         var result = await _profileService.ApplyProfileAsync(SelectedProfile.Id);
-        var failures = result.Items.Count(x => !x.Success);
+        var failedItems = result.Items.Where(x => !x.Success).ToList();
 
-        StatusMessage = failures == 0
-            ? "Profile applied successfully."
-            : $"Profile applied with {failures} failure(s).";
+        if (failedItems.Count == 0)
+        {
+            StatusMessage = "Profile applied successfully.";
+        }
+        else
+        {
+            var failedNames = failedItems
+                .Select(f => SelectedProfileItems.FirstOrDefault(i => i.Id == f.ProfileItemId)?.DisplayName ?? "unknown")
+                .ToList();
+            StatusMessage = $"Applied with {failedItems.Count} failure(s): {string.Join(", ", failedNames)}";
+        }
     }
 
     private async Task SaveSelectedProfileAsync()
@@ -428,6 +438,25 @@ public sealed class MainViewModel : ObservableObject
         _ = SaveSelectedProfileAsync();
         ActiveSettingsItem = null;
         StatusMessage = $"Removed '{item.DisplayName}' from profile.";
+    }
+
+    private void BrowseForExecutable(ProfileItemViewModel? item)
+    {
+        if (item is null) return;
+
+        var startDir = !string.IsNullOrWhiteSpace(item.EditExecutablePath)
+            ? System.IO.Path.GetDirectoryName(Environment.ExpandEnvironmentVariables(item.EditExecutablePath)) ?? string.Empty
+            : string.Empty;
+
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Select Executable",
+            Filter = "Executables (*.exe)|*.exe|All files (*.*)|*.*",
+            InitialDirectory = startDir
+        };
+
+        if (dialog.ShowDialog() != true) return;
+        item.EditExecutablePath = dialog.FileName;
     }
 
     private void BrowseForItemIcon(ProfileItemViewModel? item)

@@ -374,10 +374,53 @@
 
                                     <TextBlock Text="PATH" FontSize="10" FontWeight="SemiBold"
                                                Foreground="{StaticResource TextSecondary}" Margin="0,12,0,4"/>
+                                    <!-- Application: editable executable path + browse button -->
+                                    <Grid>
+                                        <Grid.Style>
+                                            <Style TargetType="Grid">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsApplication}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Grid.Style>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="4"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Grid.Column="0"
+                                                 Text="{Binding EditExecutablePath, UpdateSourceTrigger=PropertyChanged}"
+                                                 Background="{StaticResource BackgroundQuaternary}"
+                                                 Foreground="{StaticResource TextPrimary}"
+                                                 CaretBrush="{StaticResource TextPrimary}"
+                                                 Padding="8,6" BorderThickness="0"
+                                                 FontSize="11" FontFamily="Consolas"
+                                                 ToolTip="Full path to the executable"/>
+                                        <Button Grid.Column="2" Content="Browse..."
+                                                Style="{StaticResource SecondaryButtonStyle}"
+                                                FontSize="11" Padding="8,6"
+                                                Command="{Binding DataContext.BrowseForExecutableCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"/>
+                                    </Grid>
+                                    <!-- Service: read-only path display -->
                                     <TextBlock Text="{Binding TargetPath}"
                                                Foreground="{StaticResource TextMuted}"
                                                FontSize="11" FontFamily="Consolas"
-                                               TextWrapping="Wrap"/>
+                                               TextWrapping="Wrap">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsApplication}" Value="False">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
                                 </StackPanel>
 
                                 <!-- Scrollable Settings -->

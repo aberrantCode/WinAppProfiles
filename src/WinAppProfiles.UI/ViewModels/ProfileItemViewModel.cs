@@ -22,6 +22,7 @@ public sealed class ProfileItemViewModel : ObservableObject
     private int _editStartupDelaySeconds;
     private bool _editOnlyApplyOnBattery;
     private bool _editForceMinimizedOnStart;
+    private string _editExecutablePath = string.Empty;
     private string? _editCustomIconPath;
     private int _editIconIndex;
     private IconOption? _editSelectedIconOption;
@@ -133,6 +134,12 @@ public sealed class ProfileItemViewModel : ObservableObject
 
     public bool IsEditDesiredRunning => _editDesiredState == DesiredState.Running;
 
+    public string EditExecutablePath
+    {
+        get => _editExecutablePath;
+        set => SetProperty(ref _editExecutablePath, value);
+    }
+
     public string? EditCustomIconPath
     {
         get => _editCustomIconPath;
@@ -207,6 +214,7 @@ public sealed class ProfileItemViewModel : ObservableObject
     {
         EditDisplayName = _model.DisplayName;
         EditDesiredState = _model.DesiredState;
+        EditExecutablePath = _model.ExecutablePath ?? string.Empty;
         EditStartupDelaySeconds = _model.StartupDelaySeconds;
         EditOnlyApplyOnBattery = _model.OnlyApplyOnBattery;
         EditForceMinimizedOnStart = _model.ForceMinimizedOnStart;
@@ -219,12 +227,15 @@ public sealed class ProfileItemViewModel : ObservableObject
     {
         _model.DisplayName = EditDisplayName;
         _model.DesiredState = EditDesiredState;
+        _model.ExecutablePath = string.IsNullOrWhiteSpace(EditExecutablePath) ? null : EditExecutablePath;
         _model.StartupDelaySeconds = EditStartupDelaySeconds;
         _model.OnlyApplyOnBattery = EditOnlyApplyOnBattery;
         _model.ForceMinimizedOnStart = EditForceMinimizedOnStart;
         _model.CustomIconPath = string.IsNullOrWhiteSpace(EditCustomIconPath) ? null : EditCustomIconPath;
         _model.IconIndex = EditIconIndex;
         OnPropertyChanged(nameof(DisplayName));
+        OnPropertyChanged(nameof(ExecutablePath));
+        OnPropertyChanged(nameof(TargetPath));
         OnPropertyChanged(nameof(DesiredState));
         OnPropertyChanged(nameof(IsIgnored));
         OnPropertyChanged(nameof(IsRunning));
