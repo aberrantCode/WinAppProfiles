@@ -23,6 +23,7 @@ namespace WinAppProfiles.UI;
 public partial class App : System.Windows.Application
 {
     private IHost? _host;
+    public IHost? Host => _host;
     private const string MutexName = "WinAppProfilesSingleInstanceMutex"; // Unique name for the mutex
     private Mutex? _mutex;
     private bool _isFirstInstance;
@@ -86,14 +87,26 @@ public partial class App : System.Windows.Application
 
             var dbPath = Path.Combine(appData, "profiles.db");
 
-            _host = Host.CreateDefaultBuilder()
+            _host = Microsoft.Extensions.Hosting.Host.CreateDefaultBuilder()
                 .UseSerilog()
                 .ConfigureServices(services =>
                 {
                     services.AddWinAppProfilesInfrastructure(dbPath);
-                    services.AddSingleton<MainViewModel>(s => new MainViewModel(s.GetRequiredService<IProfileService>(), s.GetRequiredService<SettingsViewModel>(), s.GetRequiredService<IStateController>(), s.GetRequiredService<ILoggerFactory>()));
+                    services.AddSingleton<UI.Services.IconExtractionService>();
+                    services.AddSingleton<UI.Services.IconCacheService>();
+                    services.AddSingleton<UI.Services.IStatusMonitoringService, UI.Services.StatusMonitoringService>();
+                    services.AddSingleton<MainViewModel>(s => new MainViewModel(
+                        s.GetRequiredService<IProfileService>(),
+                        s.GetRequiredService<SettingsViewModel>(),
+                        s.GetRequiredService<IStateController>(),
+                        s.GetRequiredService<IDiscoveryService>(),
+                        s.GetRequiredService<ILoggerFactory>(),
+                        s.GetRequiredService<UI.Services.IconCacheService>(),
+                        s.GetRequiredService<UI.Services.IStatusMonitoringService>()));
                     services.AddSingleton<MainWindow>(s => new MainWindow(s.GetRequiredService<MainViewModel>(), s.GetRequiredService<IAppSettingsRepository>()));
                     services.AddSingleton<SettingsViewModel>();
+                    services.AddTransient<TabbedWindow>();
+                    services.AddTransient<CardWindow>(); // Add CardWindow
                 })
                 .Build();
 
@@ -122,7 +135,21 @@ public partial class App : System.Windows.Application
 
             await SeedDefaultProfileAsync(profileService);
 
-            var window = _host.Services.GetRequiredService<MainWindow>();
+            Window window;
+            switch (appSettings.DefaultInterfaceType)
+            {
+                case InterfaceType.Tabbed:
+                    window = _host.Services.GetRequiredService<TabbedWindow>();
+                    break;
+                case InterfaceType.Cards:
+                    window = _host.Services.GetRequiredService<CardWindow>();
+                    break;
+                case InterfaceType.Default:
+                default:
+                    window = _host.Services.GetRequiredService<MainWindow>();
+                    break;
+            }
+
             window.Show();
 
             // Apply Default Profile and Auto-apply setting
@@ -144,8 +171,20 @@ public partial class App : System.Windows.Application
             // Apply MinimizeOnLaunch setting
             if (appSettings.MinimizeOnLaunch)
             {
-                window.WindowState = WindowState.Minimized;
-                window.Hide(); // Hide from taskbar
+                if (appSettings.MinimizeToTrayOnClose)
+                {
+                    // Start hidden in the system tray
+                    switch (window)
+                    {
+                        case CardWindow cw: cw.MinimizeToTray(); break;
+                        case TabbedWindow tw: tw.MinimizeToTray(); break;
+                        case MainWindow mw: mw.MinimizeToTray(); break;
+                    }
+                }
+                else
+                {
+                    window.WindowState = WindowState.Minimized;
+                }
             }
         }
         catch (Exception ex)
@@ -220,13 +259,152 @@ public partial class App : System.Windows.Application
             IsDefault = true,
             Items =
             [
+                // Applications - Diverse set, some running, some stopped, some unknown state
+                new ProfileItem
+                {
+                    TargetType = TargetType.Application,
+                    DisplayName = "Apple Stas",
+                    ExecutablePath = @"C:\Program Files\Apple\AppleStas.exe", // Placeholder path
+                    DesiredState = DesiredState.Running,
+                    IsReviewed = true
+                },
+                new ProfileItem
+                {
+                    TargetType = TargetType.Application,
+                    DisplayName = "Application Service",
+                    ExecutablePath = @"C:\Program Files\AppService\AppService.exe", // Placeholder path
+                    DesiredState = DesiredState.Stopped,
+                    IsReviewed = true
+                },
+                new ProfileItem
+                {
+                    TargetType = TargetType.Application,
+                    DisplayName = "Microsoft Edge Serveshot",
+                    ExecutablePath = @"C:\Program Files\Microsoft Edge\Application\msedge.exe",
+                    DesiredState = DesiredState.Stopped,
+                    IsReviewed = true
+                },
+                new ProfileItem
+                {
+                    TargetType = TargetType.Application,
+                    DisplayName = "Microsoft Edge",
+                    ExecutablePath = @"C:\Program Files\Microsoft Edge\Application\msedge.exe",
+                    DesiredState = DesiredState.Running,
+                    IsReviewed = true
+                },
+                new ProfileItem
+                {
+                    TargetType = TargetType.Application,
+                    DisplayName = "Windows Eateltator",
+                    ExecutablePath = @"C:\Windows\System32\Eateltator.exe", // Placeholder path
+                    DesiredState = DesiredState.Stopped,
+                    IsReviewed = true
+                },
+                new ProfileItem
+                {
+                    TargetType = TargetType.Application,
+                    DisplayName = "Windows 6ramehuit",
+                    ExecutablePath = @"C:\Windows\System32\6ramehuit.exe", // Placeholder path
+                    DesiredState = DesiredState.Ignore, // Example of ignore
+                    IsReviewed = true
+                },
+                new ProfileItem
+                {
+                    TargetType = TargetType.Application,
+                    DisplayName = "Microsoft Emlon",
+                    ExecutablePath = @"C:\Program Files\Microsoft Office\Emlon.exe", // Placeholder path
+                    DesiredState = DesiredState.Running,
+                    IsReviewed = true
+                },
+                new ProfileItem
+                {
+                    TargetType = TargetType.Application,
+                    DisplayName = "Microsoft Office",
+                    ExecutablePath = @"C:\Program Files\Microsoft Office\Office.exe", // Placeholder path
+                    DesiredState = DesiredState.Stopped,
+                    IsReviewed = true
+                },
+                new ProfileItem
+                {
+                    TargetType = TargetType.Application,
+                    DisplayName = "Microsoft Eocrelkop",
+                    ExecutablePath = @"C:\Program Files\Microsoft Office\Eocrelkop.exe", // Placeholder path
+                    DesiredState = DesiredState.Stopped,
+                    IsReviewed = true
+                },
+                new ProfileItem
+                {
+                    TargetType = TargetType.Application,
+                    DisplayName = "WinAppProfiles",
+                    ExecutablePath = Assembly.GetExecutingAssembly().Location,
+                    DesiredState = DesiredState.Running,
+                    IsReviewed = true
+                },
+                new ProfileItem
+                {
+                    TargetType = TargetType.Application,
+                    DisplayName = "Doux Chocker",
+                    ExecutablePath = @"C:\Program Files\Doux\DouxChocker.exe", // Placeholder path
+                    DesiredState = DesiredState.Running,
+                    IsReviewed = true
+                },
+                // Services - Example services
+                new ProfileItem
+                {
+                    TargetType = TargetType.Service,
+                    DisplayName = "IIS Admin Service",
+                    ServiceName = "IISADMIN",
+                    DesiredState = DesiredState.Running,
+                    IsReviewed = true
+                },
+                new ProfileItem
+                {
+                    TargetType = TargetType.Service,
+                    DisplayName = "Windows Search",
+                    ServiceName = "WSearch",
+                    DesiredState = DesiredState.Stopped,
+                    IsReviewed = true
+                },
                 new ProfileItem
                 {
                     TargetType = TargetType.Service,
                     DisplayName = "Print Spooler",
                     ServiceName = "Spooler",
-                    DesiredState = DesiredState.Stopped,
+                    DesiredState = DesiredState.Running,
                     IsReviewed = true
+                },
+                new ProfileItem
+                {
+                    TargetType = TargetType.Service,
+                    DisplayName = "Windows Update",
+                    ServiceName = "wuauserv",
+                    DesiredState = DesiredState.Ignore,
+                    IsReviewed = true
+                },
+                // Needs Review Items (IsReviewed = false) - these are new discoveries
+                new ProfileItem
+                {
+                    TargetType = TargetType.Application,
+                    DisplayName = "Zoom",
+                    ExecutablePath = @"C:\Users\" + Environment.UserName + @"\AppData\Roaming\Zoom\bin\Zoom.exe",
+                    DesiredState = DesiredState.Stopped,
+                    IsReviewed = false
+                },
+                new ProfileItem
+                {
+                    TargetType = TargetType.Application,
+                    DisplayName = "Discord",
+                    ExecutablePath = @"C:\Users\" + Environment.UserName + @"\AppData\Local\Discord\app-1.0.9003\Discord.exe",
+                    DesiredState = DesiredState.Stopped,
+                    IsReviewed = false
+                },
+                new ProfileItem
+                {
+                    TargetType = TargetType.Service,
+                    DisplayName = "SQL Server Browser",
+                    ServiceName = "SQLBrowser",
+                    DesiredState = DesiredState.Stopped,
+                    IsReviewed = false
                 }
             ]
         });

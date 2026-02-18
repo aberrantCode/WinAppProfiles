@@ -99,7 +99,12 @@ public sealed class SqliteProfileRepository : IProfileRepository
                 """
                 SELECT id, profile_id AS ProfileId, target_type AS TargetType, display_name AS DisplayName,
                        process_name AS ProcessName, executable_path AS ExecutablePath, service_name AS ServiceName,
-                       desired_state AS DesiredState, is_reviewed AS IsReviewed
+                       desired_state AS DesiredState, is_reviewed AS IsReviewed,
+                       startup_delay_seconds AS StartupDelaySeconds,
+                       only_apply_on_battery AS OnlyApplyOnBattery,
+                       force_minimized_on_start AS ForceMinimizedOnStart,
+                       custom_icon_path AS CustomIconPath,
+                       icon_index AS IconIndex
                 FROM profile_items
                 WHERE profile_id = @ProfileId;
                 """,
@@ -223,9 +228,11 @@ public sealed class SqliteProfileRepository : IProfileRepository
         return connection.ExecuteAsync(
             """
             INSERT INTO profile_items
-            (id, profile_id, target_type, display_name, process_name, executable_path, service_name, desired_state, is_reviewed)
+            (id, profile_id, target_type, display_name, process_name, executable_path, service_name, desired_state, is_reviewed,
+             startup_delay_seconds, only_apply_on_battery, force_minimized_on_start, custom_icon_path, icon_index)
             VALUES
-            (@Id, @ProfileId, @TargetType, @DisplayName, @ProcessName, @ExecutablePath, @ServiceName, @DesiredState, @IsReviewed);
+            (@Id, @ProfileId, @TargetType, @DisplayName, @ProcessName, @ExecutablePath, @ServiceName, @DesiredState, @IsReviewed,
+             @StartupDelaySeconds, @OnlyApplyOnBattery, @ForceMinimizedOnStart, @CustomIconPath, @IconIndex);
             """,
             new
             {
@@ -237,7 +244,12 @@ public sealed class SqliteProfileRepository : IProfileRepository
                 item.ExecutablePath,
                 item.ServiceName,
                 DesiredState = (int)item.DesiredState,
-                item.IsReviewed
+                item.IsReviewed,
+                item.StartupDelaySeconds,
+                OnlyApplyOnBattery = item.OnlyApplyOnBattery ? 1 : 0,
+                ForceMinimizedOnStart = item.ForceMinimizedOnStart ? 1 : 0,
+                item.CustomIconPath,
+                item.IconIndex
             });
     }
 
@@ -265,7 +277,12 @@ public sealed class SqliteProfileRepository : IProfileRepository
             ExecutablePath = row.ExecutablePath,
             ServiceName = row.ServiceName,
             DesiredState = (DesiredState)row.DesiredState,
-            IsReviewed = row.IsReviewed != 0
+            IsReviewed = row.IsReviewed != 0,
+            StartupDelaySeconds = row.StartupDelaySeconds,
+            OnlyApplyOnBattery = row.OnlyApplyOnBattery != 0,
+            ForceMinimizedOnStart = row.ForceMinimizedOnStart != 0,
+            CustomIconPath = row.CustomIconPath,
+            IconIndex = row.IconIndex
         };
     }
 
@@ -289,5 +306,10 @@ public sealed class SqliteProfileRepository : IProfileRepository
         public string? ServiceName { get; init; }
         public int DesiredState { get; init; }
         public long IsReviewed { get; init; }
+        public int StartupDelaySeconds { get; init; }
+        public long OnlyApplyOnBattery { get; init; }
+        public long ForceMinimizedOnStart { get; init; }
+        public string? CustomIconPath { get; init; }
+        public int IconIndex { get; init; }
     }
 }

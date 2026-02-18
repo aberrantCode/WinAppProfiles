@@ -12,6 +12,22 @@ public sealed class SqliteAppSettingsRepository : IAppSettingsRepository
     public SqliteAppSettingsRepository(IDbConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory;
+        InitializeDatabase();
+    }
+
+    private void InitializeDatabase()
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        connection.Execute("CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);");
+        
+        var version = connection.QuerySingle<int>("PRAGMA user_version;");
+        if (version < 1)
+        {
+            // Add DefaultInterfaceType to the app_settings table
+            connection.Execute("INSERT OR IGNORE INTO app_settings (key, value) VALUES (@Key, @Value);", 
+                new { Key = nameof(AppSettings.DefaultInterfaceType), Value = InterfaceType.Default.ToString() });
+            connection.Execute("PRAGMA user_version = 1;");
+        }
     }
 
     public async Task<AppSettings> GetSettingsAsync(CancellationToken cancellationToken = default)
@@ -27,19 +43,28 @@ public sealed class SqliteAppSettingsRepository : IAppSettingsRepository
             switch (row.Key)
             {
                 case nameof(AppSettings.DefaultProfileId):
-                    settings.DefaultProfileId = Guid.Parse(row.Value);
+                    if (Guid.TryParse(row.Value, out var defaultProfileId))
+                        settings.DefaultProfileId = defaultProfileId;
                     break;
                 case nameof(AppSettings.AutoApplyDefaultProfile):
-                    settings.AutoApplyDefaultProfile = bool.Parse(row.Value);
+                    if (bool.TryParse(row.Value, out var autoApply))
+                        settings.AutoApplyDefaultProfile = autoApply;
                     break;
                 case nameof(AppSettings.EnableDarkMode):
-                    settings.EnableDarkMode = bool.Parse(row.Value);
+                    if (bool.TryParse(row.Value, out var darkMode))
+                        settings.EnableDarkMode = darkMode;
                     break;
                 case nameof(AppSettings.MinimizeOnLaunch):
-                    settings.MinimizeOnLaunch = bool.Parse(row.Value);
+                    if (bool.TryParse(row.Value, out var minimizeOnLaunch))
+                        settings.MinimizeOnLaunch = minimizeOnLaunch;
                     break;
                 case nameof(AppSettings.MinimizeToTrayOnClose):
-                    settings.MinimizeToTrayOnClose = bool.Parse(row.Value);
+                    if (bool.TryParse(row.Value, out var minimizeToTray))
+                        settings.MinimizeToTrayOnClose = minimizeToTray;
+                    break;
+                case nameof(AppSettings.DefaultInterfaceType):
+                    if (Enum.TryParse<InterfaceType>(row.Value, out var interfaceType))
+                        settings.DefaultInterfaceType = interfaceType;
                     break;
             }
         }
@@ -61,7 +86,8 @@ public sealed class SqliteAppSettingsRepository : IAppSettingsRepository
                 new { Key = nameof(AppSettings.AutoApplyDefaultProfile), Value = settings.AutoApplyDefaultProfile.ToString() },
                 new { Key = nameof(AppSettings.EnableDarkMode), Value = settings.EnableDarkMode.ToString() },
                 new { Key = nameof(AppSettings.MinimizeOnLaunch), Value = settings.MinimizeOnLaunch.ToString() },
-                new { Key = nameof(AppSettings.MinimizeToTrayOnClose), Value = settings.MinimizeToTrayOnClose.ToString() }
+                new { Key = nameof(AppSettings.MinimizeToTrayOnClose), Value = settings.MinimizeToTrayOnClose.ToString() },
+                new { Key = nameof(AppSettings.DefaultInterfaceType), Value = settings.DefaultInterfaceType.ToString() }
             });
     }
 

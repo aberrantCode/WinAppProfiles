@@ -3,7 +3,8 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using WinAppProfiles.Core.Models;
 using System.Windows.Forms;
-using System.Drawing;
+using System.Drawing; // Added
+using System.IO;    // Added
 using WinAppProfiles.Core.Abstractions;
 
 namespace WinAppProfiles.UI.Views;
@@ -50,7 +51,17 @@ public partial class MainWindow : Window
     private void InitializeNotifyIcon()
     {
         _notifyIcon = new NotifyIcon();
-        _notifyIcon.Icon = SystemIcons.Application; // Placeholder icon
+        // Load the custom icon from the assets folder
+        var iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets", "logo.ico");
+        if (File.Exists(iconPath))
+        {
+            _notifyIcon.Icon = new Icon(iconPath);
+        }
+        else
+        {
+            _notifyIcon.Icon = SystemIcons.Application; // Fallback to default
+        }
+        
         _notifyIcon.Text = "WinAppProfiles";
         _notifyIcon.MouseDoubleClick += (s, args) =>
         {
@@ -78,6 +89,13 @@ public partial class MainWindow : Window
             System.Windows.Application.Current.Shutdown();
         });
         _notifyIcon.ContextMenuStrip = contextMenu;
+    }
+
+    public void MinimizeToTray()
+    {
+        Hide();
+        if (_notifyIcon is not null)
+            _notifyIcon.Visible = true;
     }
 
     private void DisposeNotifyIcon()

@@ -58,11 +58,22 @@ public sealed class DbInitializer
                 error_message TEXT NULL,
                 FOREIGN KEY(run_id) REFERENCES apply_runs(id)
             );
-
-            CREATE TABLE IF NOT EXISTS app_settings (
-                key TEXT PRIMARY KEY,
-                value TEXT NOT NULL
-            );
             """);
+
+        // Schema migrations — SQLite doesn't support IF NOT EXISTS on ALTER TABLE,
+        // so we run each in its own try/catch and swallow "duplicate column name" errors.
+        var migrations = new[]
+        {
+            "ALTER TABLE profile_items ADD COLUMN startup_delay_seconds INTEGER NOT NULL DEFAULT 0;",
+            "ALTER TABLE profile_items ADD COLUMN only_apply_on_battery INTEGER NOT NULL DEFAULT 0;",
+            "ALTER TABLE profile_items ADD COLUMN force_minimized_on_start INTEGER NOT NULL DEFAULT 0;",
+            "ALTER TABLE profile_items ADD COLUMN custom_icon_path TEXT NULL;",
+            "ALTER TABLE profile_items ADD COLUMN icon_index INTEGER NOT NULL DEFAULT 0;"
+        };
+        foreach (var migration in migrations)
+        {
+            try { await connection.ExecuteAsync(migration); }
+            catch { /* column already exists – ignore */ }
+        }
     }
 }
