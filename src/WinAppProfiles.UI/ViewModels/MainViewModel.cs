@@ -4,10 +4,12 @@ using System.ComponentModel;
 using System.Windows.Input;
 using System.Windows.Data;
 using System.Windows;
+using System.Windows.Media.Imaging;
 using WinAppProfiles.Core.Abstractions;
 using WinAppProfiles.Core.Models;
 using WinAppProfiles.UI.Theming;
 using WinAppProfiles.UI.ViewModels;
+using WinAppProfiles.UI.Services;
 using Microsoft.Extensions.Logging; // Added for ILoggerFactory
 
 namespace WinAppProfiles.UI.ViewModels;
@@ -16,7 +18,11 @@ public sealed class MainViewModel : ObservableObject
 {
     private readonly IProfileService _profileService;
     private readonly IStateController _stateController;
+    private readonly IDiscoveryService _discoveryService;
+    private readonly ILoggerFactory _loggerFactory;
     private readonly ILogger<ProfileItemViewModel> _profileItemViewModelLogger; // Logger for ProfileItemViewModel
+    private readonly IconCacheService _iconCacheService;
+    private readonly IStatusMonitoringService _statusMonitoringService;
     private readonly AsyncRelayCommand _applyCommand;
     private readonly AsyncRelayCommand _saveCommand;
     private readonly AsyncRelayCommand _newProfileCommand;
@@ -25,6 +31,7 @@ public sealed class MainViewModel : ObservableObject
     private readonly AsyncRelayCommand _addSelectedNeedsReviewCommand;
     private DesiredState _selectedDesiredStateForBulkApply = DesiredState.Running;
     private readonly AsyncRelayCommand _applyBulkDesiredStateCommand;
+    private readonly AsyncRelayCommand _openProfileWizardCommand;
     private readonly SettingsViewModel _settingsViewModel;
     private Profile? _selectedProfile;
     private ProfileItemViewModel? _selectedProfileItem;
@@ -38,15 +45,38 @@ public sealed class MainViewModel : ObservableObject
     private readonly ObservableCollection<ProfileItemViewModel> _selectedNeedsReviewItems = [];
     private readonly ObservableCollection<ProfileItemViewModel> _selectedProfileItemsForBulkApply = [];
     private readonly AsyncRelayCommand _openSettingsCommand; // Declare the command
+    private ProfileItemViewModel? _activeSettingsItem;
 
     public ICommand PromoteNeedsReviewItemCommand { get; }
+    public ICommand SaveProfileItemCommand { get; }
+    public ICommand OpenItemSettingsCommand { get; }
+    public ICommand CloseItemSettingsPanelCommand { get; }
+    public ICommand RemoveProfileItemCommand { get; }
+    public ICommand BrowseForItemIconCommand { get; }
+    public ICommand ResetItemIconCommand { get; }
 
-    public MainViewModel(IProfileService profileService, SettingsViewModel settingsViewModel, IStateController stateController, ILoggerFactory loggerFactory)
+    public ProfileItemViewModel? ActiveSettingsItem
+    {
+        get => _activeSettingsItem;
+        private set
+        {
+            SetProperty(ref _activeSettingsItem, value);
+            OnPropertyChanged(nameof(IsItemSettingsPanelOpen));
+        }
+    }
+
+    public bool IsItemSettingsPanelOpen => _activeSettingsItem is not null;
+
+    public MainViewModel(IProfileService profileService, SettingsViewModel settingsViewModel, IStateController stateController, IDiscoveryService discoveryService, ILoggerFactory loggerFactory, IconCacheService iconCacheService, IStatusMonitoringService statusMonitoringService)
     {
         _profileService = profileService;
         _settingsViewModel = settingsViewModel; // Store reference to settingsViewModel
         _stateController = stateController;
+        _discoveryService = discoveryService;
+        _loggerFactory = loggerFactory;
         _profileItemViewModelLogger = loggerFactory.CreateLogger<ProfileItemViewModel>(); // Create logger
+        _iconCacheService = iconCacheService;
+        _statusMonitoringService = statusMonitoringService;
         if (System.Windows.Application.Current is not null)
         {
             ThemeManager.ApplyTheme(false);
@@ -69,6 +99,8 @@ public sealed class MainViewModel : ObservableObject
         _applyBulkDesiredStateCommand.ErrorCallback = ex => StatusMessage = $"Error: {ex.Message}";
         _openSettingsCommand = new AsyncRelayCommand(OpenSettingsAsync);
         _openSettingsCommand.ErrorCallback = ex => StatusMessage = $"Error: {ex.Message}";
+        _openProfileWizardCommand = new AsyncRelayCommand(OpenProfileWizardAsync);
+        _openProfileWizardCommand.ErrorCallback = ex => StatusMessage = $"Error: {ex.Message}";
         ApplyCommand = _applyCommand;
         SaveCommand = _saveCommand;
         NewProfileCommand = _newProfileCommand;
@@ -77,17 +109,30 @@ public sealed class MainViewModel : ObservableObject
         AddSelectedNeedsReviewCommand = _addSelectedNeedsReviewCommand;
         ApplyBulkDesiredStateCommand = _applyBulkDesiredStateCommand;
         OpenSettingsCommand = _openSettingsCommand;
-        PromoteNeedsReviewItemCommand = new RelayCommand<ProfileItemViewModel>(PromoteNeedsReviewItem); // Initialize new command
+        OpenProfileWizardCommand = _openProfileWizardCommand;
+        PromoteNeedsReviewItemCommand = new RelayCommand<ProfileItemViewModel>(PromoteNeedsReviewItem);
+        SaveProfileItemCommand = new RelayCommand<ProfileItemViewModel>(SaveProfileItem);
+        OpenItemSettingsCommand = new RelayCommand<ProfileItemViewModel>(OpenItemSettings);
+        CloseItemSettingsPanelCommand = new RelayCommand(CloseItemSettingsPanel);
+        RemoveProfileItemCommand = new RelayCommand<ProfileItemViewModel>(RemoveProfileItem);
+        BrowseForItemIconCommand = new RelayCommand<ProfileItemViewModel>(BrowseForItemIcon);
+        ResetItemIconCommand = new RelayCommand<ProfileItemViewModel>(ResetItemIcon);
 
         NeedsReviewView = CollectionViewSource.GetDefaultView(NeedsReviewItems);
         NeedsReviewView.Filter = NeedsReviewFilter;
 
-        CardApplicationsView = CollectionViewSource.GetDefaultView(SelectedProfileItems);
+        // Create separate CollectionView instances for Cards (not using GetDefaultView which returns same instance)
+        CardApplicationsView = new CollectionViewSource { Source = SelectedProfileItems }.View;
         CardApplicationsView.Filter = CardApplicationFilter;
-        CardServicesView = CollectionViewSource.GetDefaultView(SelectedProfileItems);
+        CardServicesView = new CollectionViewSource { Source = SelectedProfileItems }.View;
         CardServicesView.Filter = CardServiceFilter;
 
         _ = LoadAsync();
+
+        // Register collections for status monitoring
+        _statusMonitoringService.RegisterCollection(SelectedProfileItems, TimeSpan.FromSeconds(5));
+        _statusMonitoringService.RegisterCollection(NeedsReviewItems, TimeSpan.FromSeconds(10)); // Slower for needs review
+        _statusMonitoringService.Start();
     }
 
     public ObservableCollection<Profile> Profiles { get; } = [];
@@ -108,6 +153,7 @@ public sealed class MainViewModel : ObservableObject
     public ICommand AddSelectedNeedsReviewCommand { get; }
     public ICommand ApplyBulkDesiredStateCommand { get; }
     public ICommand OpenSettingsCommand { get; }
+    public ICommand OpenProfileWizardCommand { get; }
 
 
     public Profile? SelectedProfile
@@ -322,7 +368,7 @@ public sealed class MainViewModel : ObservableObject
 
         foreach (var item in SelectedProfile.Items.OrderBy(x => x.DisplayName))
         {
-            SelectedProfileItems.Add(new ProfileItemViewModel(item, _stateController, _profileItemViewModelLogger));
+            SelectedProfileItems.Add(CreateProfileItemViewModel(item));
         }
         CardApplicationsView.Refresh();
         CardServicesView.Refresh();
@@ -339,7 +385,7 @@ public sealed class MainViewModel : ObservableObject
         var items = await _profileService.GetNeedsReviewAsync(SelectedProfile.Id);
         foreach (var item in items)
         {
-            NeedsReviewItems.Add(new ProfileItemViewModel(item, _stateController, _profileItemViewModelLogger));
+            NeedsReviewItems.Add(CreateProfileItemViewModel(item));
         }
 
         await UpdateAllNeedsReviewStatesAsync(); // Await all state updates
@@ -354,6 +400,142 @@ public sealed class MainViewModel : ObservableObject
     private bool CardServiceFilter(object candidate)
     {
         return candidate is ProfileItemViewModel item && item.TargetType == TargetType.Service;
+    }
+
+    private void OpenItemSettings(ProfileItemViewModel? item)
+    {
+        if (item is null) return;
+        item.InitializeEditState();
+        ActiveSettingsItem = item;
+
+        // Pre-load icons from the custom source (if set) or the executable
+        var iconSourcePath = !string.IsNullOrWhiteSpace(item.EditCustomIconPath)
+            ? item.EditCustomIconPath
+            : (item.TargetType == TargetType.Application ? item.ExecutablePath : null);
+
+        if (!string.IsNullOrWhiteSpace(iconSourcePath))
+            LoadIconOptionsForItem(item, iconSourcePath, item.EditIconIndex);
+    }
+
+    private void CloseItemSettingsPanel() => ActiveSettingsItem = null;
+
+    private void RemoveProfileItem(ProfileItemViewModel? item)
+    {
+        if (item is null) return;
+        SelectedProfileItems.Remove(item);
+        if (SelectedProfile is not null)
+            SelectedProfile.Items = SelectedProfileItems.Select(x => x.GetModel()).ToList();
+        _ = SaveSelectedProfileAsync();
+        ActiveSettingsItem = null;
+        StatusMessage = $"Removed '{item.DisplayName}' from profile.";
+    }
+
+    private void BrowseForItemIcon(ProfileItemViewModel? item)
+    {
+        if (item is null) return;
+
+        var startPath = !string.IsNullOrWhiteSpace(item.EditCustomIconPath)
+            ? item.EditCustomIconPath
+            : item.ExecutablePath ?? string.Empty;
+        var startDir = !string.IsNullOrWhiteSpace(startPath)
+            ? System.IO.Path.GetDirectoryName(Environment.ExpandEnvironmentVariables(startPath)) ?? string.Empty
+            : string.Empty;
+
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Select Icon Source File",
+            Filter = "Icon sources (*.exe;*.dll;*.ico;*.icl)|*.exe;*.dll;*.ico;*.icl|All files (*.*)|*.*",
+            InitialDirectory = startDir
+        };
+
+        if (dialog.ShowDialog() != true) return;
+
+        item.EditCustomIconPath = dialog.FileName;
+        item.EditIconIndex = 0;
+        LoadIconOptionsForItem(item, dialog.FileName, selectIndex: 0);
+    }
+
+    private void ResetItemIcon(ProfileItemViewModel? item)
+    {
+        if (item is null) return;
+        item.EditCustomIconPath = null;
+        item.EditIconIndex = 0;
+        item.AvailableIconOptions.Clear();
+        item.EditSelectedIconOption = null;
+
+        // Reload from the default source
+        var defaultPath = item.TargetType == WinAppProfiles.Core.Models.TargetType.Application
+            ? item.ExecutablePath ?? string.Empty
+            : string.Empty;
+        if (!string.IsNullOrWhiteSpace(defaultPath))
+            LoadIconOptionsForItem(item, defaultPath, selectIndex: 0);
+    }
+
+    private void LoadIconOptionsForItem(ProfileItemViewModel item, string filePath, int selectIndex = 0)
+    {
+        var expandedPath = Environment.ExpandEnvironmentVariables(filePath);
+        if (!System.IO.File.Exists(expandedPath)) return;
+
+        Task.Run(() =>
+        {
+            var count = _iconCacheService.GetIconCount(expandedPath);
+            var options = new List<IconOption>(count);
+            for (int i = 0; i < Math.Min(count, 100); i++)
+            {
+                var icon = _iconCacheService.GetIconFromFileAtIndex(expandedPath, i, 32);
+                options.Add(new IconOption(i, icon));
+            }
+
+            System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+            {
+                item.AvailableIconOptions.Clear();
+                foreach (var opt in options)
+                    item.AvailableIconOptions.Add(opt);
+
+                item.EditSelectedIconOption = item.AvailableIconOptions
+                    .FirstOrDefault(o => o.Index == selectIndex)
+                    ?? item.AvailableIconOptions.FirstOrDefault();
+            });
+        });
+    }
+
+    private void RefreshItemIcon(ProfileItemViewModel item)
+    {
+        Task.Run(() =>
+        {
+            var model = item.GetModel();
+            BitmapSource icon;
+
+            if (!string.IsNullOrWhiteSpace(model.CustomIconPath))
+            {
+                icon = _iconCacheService.GetIconFromFileAtIndex(
+                    Environment.ExpandEnvironmentVariables(model.CustomIconPath), model.IconIndex, 64);
+            }
+            else if (model.TargetType == TargetType.Application && !string.IsNullOrWhiteSpace(model.ExecutablePath))
+            {
+                icon = _iconCacheService.GetExecutableIcon(model.ExecutablePath, 64);
+            }
+            else if (model.TargetType == TargetType.Service && !string.IsNullOrWhiteSpace(model.ServiceName))
+            {
+                icon = _iconCacheService.GetServiceIcon(model.ServiceName, 64);
+            }
+            else
+            {
+                icon = _iconCacheService.GetOrExtractIcon("fallback", () => null);
+            }
+
+            System.Windows.Application.Current?.Dispatcher.Invoke(() => item.Icon = icon);
+        });
+    }
+
+    private void SaveProfileItem(ProfileItemViewModel? item)
+    {
+        if (item is null) return;
+        item.ApplyEdits();
+        _ = SaveSelectedProfileAsync();
+        RefreshItemIcon(item);
+        StatusMessage = $"Saved '{item.DisplayName}'.";
+        ActiveSettingsItem = null;
     }
 
     public void PromoteNeedsReviewItem(ProfileItemViewModel? item)
@@ -436,7 +618,7 @@ public sealed class MainViewModel : ObservableObject
                 DesiredState = DesiredState.Ignore,
                 IsReviewed = true
             };
-            var insertedViewModel = new ProfileItemViewModel(insertedModel, _stateController, _profileItemViewModelLogger);
+            var insertedViewModel = CreateProfileItemViewModel(insertedModel);
 
             SelectedProfileItems.Add(insertedViewModel);
             NeedsReviewItems.Remove(itemViewModel);
@@ -469,6 +651,39 @@ public sealed class MainViewModel : ObservableObject
         {
             StatusMessage = $"{alreadyExisting} selected item(s) already existed in the profile.";
         }
+    }
+
+    private ProfileItemViewModel CreateProfileItemViewModel(ProfileItem item)
+    {
+        var viewModel = new ProfileItemViewModel(item, _stateController, _profileItemViewModelLogger);
+
+        // Load icon asynchronously with caching
+        Task.Run(() =>
+        {
+            BitmapSource icon;
+
+            if (item.TargetType == TargetType.Application && !string.IsNullOrWhiteSpace(item.ExecutablePath))
+            {
+                icon = _iconCacheService.GetExecutableIcon(item.ExecutablePath, 64);
+            }
+            else if (item.TargetType == TargetType.Service && !string.IsNullOrWhiteSpace(item.ServiceName))
+            {
+                icon = _iconCacheService.GetServiceIcon(item.ServiceName, 64);
+            }
+            else
+            {
+                // No valid path or service name, use fallback
+                icon = _iconCacheService.GetOrExtractIcon("fallback", () => null);
+            }
+
+            // Update on UI thread
+            System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+            {
+                viewModel.Icon = icon;
+            });
+        });
+
+        return viewModel;
     }
 
     private bool NeedsReviewFilter(object candidate)
@@ -532,11 +747,40 @@ public sealed class MainViewModel : ObservableObject
         return SelectedProfile is not null && _selectedProfileItemsForBulkApply.Any() && IsAdvancedMode;
     }
 
-    private Task OpenSettingsAsync()
+    private async Task OpenSettingsAsync()
     {
+        var originalInterval = _settingsViewModel.StatusPollingIntervalSeconds;
+
         var settingsWindow = new Views.SettingsWindow(_settingsViewModel);
         settingsWindow.ShowDialog();
-        return Task.CompletedTask;
+
+        // If the interval changed, update the monitoring service
+        if (_settingsViewModel.StatusPollingIntervalSeconds != originalInterval)
+        {
+            var newInterval = TimeSpan.FromSeconds(_settingsViewModel.StatusPollingIntervalSeconds);
+            _statusMonitoringService.SetGlobalInterval(newInterval);
+        }
+
+        // Reload profiles if default profile might have changed
+        await LoadAsync();
+    }
+
+    private async Task OpenProfileWizardAsync()
+    {
+        var wizardViewModel = new ProfileCreationWizardViewModel(
+            _profileService,
+            _discoveryService,
+            _loggerFactory.CreateLogger<ProfileCreationWizardViewModel>(),
+            async (createdProfile) =>
+            {
+                // Reload profiles after creation
+                await LoadAsync();
+                // Select the newly created profile
+                SelectedProfile = Profiles.FirstOrDefault(p => p.Id == createdProfile.Id);
+            });
+
+        var wizardWindow = new Views.ProfileCreationWizard(wizardViewModel);
+        wizardWindow.ShowDialog();
     }
 
     private async Task UpdateAllNeedsReviewStatesAsync()
@@ -544,4 +788,5 @@ public sealed class MainViewModel : ObservableObject
         var tasks = NeedsReviewItems.Select(item => item.UpdateCurrentStateAsync()).ToList();
         await Task.WhenAll(tasks);
     }
+
 }

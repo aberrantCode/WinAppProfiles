@@ -15,22 +15,38 @@ namespace WinAppProfiles.Unit;
 public class MainViewModelTests
 {
     private readonly Mock<IProfileService> _mockProfileService;
-    private readonly Mock<IAppSettingsRepository> _mockAppSettingsRepository;
     private readonly Mock<IStateController> _mockStateController;
-    private readonly Mock<ILoggerFactory> _mockLoggerFactory; // Added
-    private readonly Mock<ILogger<ProfileItemViewModel>> _mockProfileItemViewModelLogger; // Added
+    private readonly Mock<ILoggerFactory> _mockLoggerFactory;
+    private readonly Mock<ILogger<ProfileItemViewModel>> _mockProfileItemViewModelLogger;
+    private readonly Mock<IAppSettingsRepository> _mockAppSettingsRepository;
     private readonly SettingsViewModel _settingsViewModel;
+    private readonly Mock<WinAppProfiles.UI.Services.IconCacheService> _mockIconCacheService;
+    private readonly Mock<WinAppProfiles.UI.Services.IStatusMonitoringService> _mockStatusMonitoringService;
     private readonly MainViewModel _viewModel;
 
     public MainViewModelTests()
     {
         _mockProfileService = new Mock<IProfileService>();
-        _mockAppSettingsRepository = new Mock<IAppSettingsRepository>();
         _mockStateController = new Mock<IStateController>();
-        _mockLoggerFactory = new Mock<ILoggerFactory>(); // Initialized
-        _mockProfileItemViewModelLogger = new Mock<ILogger<ProfileItemViewModel>>(); // Initialized
+        _mockLoggerFactory = new Mock<ILoggerFactory>();
+        _mockProfileItemViewModelLogger = new Mock<ILogger<ProfileItemViewModel>>();
+        _mockAppSettingsRepository = new Mock<IAppSettingsRepository>();
+        _mockIconCacheService = new Mock<WinAppProfiles.UI.Services.IconCacheService>();
+        _mockStatusMonitoringService = new Mock<WinAppProfiles.UI.Services.IStatusMonitoringService>();
+
         _mockLoggerFactory.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(_mockProfileItemViewModelLogger.Object);
-        _viewModel = new MainViewModel(_mockProfileService.Object, _settingsViewModel, _mockStateController.Object, _mockLoggerFactory.Object); // Passed mock
+        _mockAppSettingsRepository.Setup(r => r.GetSettingsAsync(default)).ReturnsAsync(new AppSettings());
+        _mockProfileService.Setup(s => s.GetProfilesAsync(default)).ReturnsAsync(new List<Profile>());
+
+        _settingsViewModel = new SettingsViewModel(_mockAppSettingsRepository.Object, _mockProfileService.Object);
+
+        _viewModel = new MainViewModel(
+            _mockProfileService.Object,
+            _settingsViewModel,
+            _mockStateController.Object,
+            _mockLoggerFactory.Object,
+            _mockIconCacheService.Object,
+            _mockStatusMonitoringService.Object);
     }
 
     [Fact]

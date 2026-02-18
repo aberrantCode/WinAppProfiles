@@ -116,6 +116,18 @@ public sealed class SettingsViewModel : ObservableObject
         }
     }
 
+    public int StatusPollingIntervalSeconds
+    {
+        get => _settings.StatusPollingIntervalSeconds;
+        set
+        {
+            if (_settings.StatusPollingIntervalSeconds == value) return;
+            _settings.StatusPollingIntervalSeconds = value;
+            OnPropertyChanged();
+            ((AsyncRelayCommand)SaveCommand).NotifyCanExecuteChanged();
+        }
+    }
+
     public IReadOnlyList<InterfaceType> AvailableInterfaceTypes { get; } =
         Enum.GetValues(typeof(InterfaceType)).Cast<InterfaceType>().ToList();
 

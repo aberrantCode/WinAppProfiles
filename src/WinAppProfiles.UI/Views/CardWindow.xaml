@@ -1,0 +1,603 @@
+<Window x:Class="WinAppProfiles.UI.Views.CardWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:models="clr-namespace:WinAppProfiles.Core.Models;assembly=WinAppProfiles.Core"
+        xmlns:vm="clr-namespace:WinAppProfiles.UI.ViewModels"
+        mc:Ignorable="d"
+        Title="WinAppProfiles" Height="700" Width="1100"
+        Icon="/assets/logo.ico"
+        Background="{DynamicResource BackgroundPrimary}"
+        TextElement.Foreground="{DynamicResource TextPrimary}"
+        WindowStartupLocation="CenterScreen"
+        WindowState="Maximized">
+    <Window.InputBindings>
+        <KeyBinding Key="S" Modifiers="Control" Command="{Binding ApplyCommand}"/>
+    </Window.InputBindings>
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../Resources/CardWindowStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <vm:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Profile Creation Form -->
+        <Border Grid.Row="0"
+                Visibility="{Binding IsCreatingProfile, Converter={StaticResource BooleanToVisibilityConverter}}"
+                Background="{StaticResource AccentPrimary}"
+                Padding="20,10"
+                Margin="0,0,0,10"
+                CornerRadius="6">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                    <Button Content="Create" Command="{Binding SaveNewProfileCommand}"
+                            Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,10,0"/>
+                    <Button Content="Cancel" Command="{Binding CancelNewProfileCommand}"
+                            Style="{StaticResource SecondaryButtonStyle}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="New Profile Name:" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="White" FontWeight="SemiBold"/>
+                    <TextBox Text="{Binding NewProfileName, UpdateSourceTrigger=PropertyChanged}"
+                             Width="300" VerticalAlignment="Center"
+                             Padding="10,6"
+                             Background="{StaticResource BackgroundPrimary}"
+                             Foreground="{StaticResource TextPrimary}"
+                             BorderThickness="0"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Header with App Name and Profile Dropdown -->
+        <Grid Grid.Row="1" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                <TextBlock Text="WinAppProfiles"
+                           Style="{StaticResource HeaderText}"
+                           VerticalAlignment="Center"
+                           Margin="0,0,15,0"/>
+                <ComboBox Width="150"
+                          VerticalAlignment="Center"
+                          Style="{StaticResource ProfileComboBoxStyle}"
+                          ItemContainerStyle="{StaticResource ProfileComboBoxItemStyle}"
+                          ItemsSource="{Binding Profiles}"
+                          SelectedItem="{Binding SelectedProfile}"
+                          DisplayMemberPath="Name"/>
+                <Button Content="+"
+                        FontSize="20"
+                        FontWeight="Bold"
+                        Width="36"
+                        Height="36"
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        Background="{StaticResource AccentPrimary}"
+                        Foreground="White"
+                        BorderThickness="0"
+                        Cursor="Hand"
+                        Command="{Binding OpenProfileWizardCommand}"
+                        ToolTip="Create a new profile">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}"
+                                                CornerRadius="18"
+                                                BorderThickness="0">
+                                            <ContentPresenter HorizontalAlignment="Center"
+                                                            VerticalAlignment="Center"
+                                                            Margin="0,-2,0,0"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource AccentHover}"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource AccentPressed}"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </StackPanel>
+
+            <!-- View Toggle Button -->
+            <Button Grid.Column="1"
+                    Content="📋 Switch to Tabbed View"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Click="SwitchView_Click"
+                    VerticalAlignment="Center"
+                    Padding="12,8"/>
+        </Grid>
+
+        <!-- Search Box -->
+        <Border Grid.Row="2" Style="{StaticResource SearchBoxStyle}">
+            <Grid>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="🔍" Margin="0,0,10,0" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                    <TextBlock Text="Search items &amp; services..."
+                               Foreground="{StaticResource TextSecondary}"
+                               FontSize="14"
+                               VerticalAlignment="Center"
+                               IsHitTestVisible="False">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding NeedsReviewSearchText}" Value="">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding NeedsReviewSearchText}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="🔍" Margin="0,0,10,0" Foreground="Transparent" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding NeedsReviewSearchText, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource SearchTextBoxStyle}"
+                             Width="500"
+                             VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Content Panel with distinct background -->
+        <Border Grid.Row="3"
+                Background="{StaticResource BackgroundSecondary}"
+                CornerRadius="8"
+                Padding="20"
+                Margin="0,0,0,10">
+            <!-- Cards Content -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel>
+                        <!-- Applications and Services side-by-side -->
+                <Grid Margin="0,0,0,30">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Applications Column -->
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Applications" Style="{StaticResource SectionHeaderText}"/>
+                        <ListView Style="{StaticResource CardListViewStyle}"
+                                  ItemContainerStyle="{StaticResource CardListViewItemStyle}"
+                                  ItemTemplate="{StaticResource ProfileItemCardTemplate}"
+                                  ItemsSource="{Binding CardApplicationsView}"
+                                  PreviewMouseWheel="ListView_PreviewMouseWheel">
+                            <ListView.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ListView.ItemsPanel>
+                        </ListView>
+                    </StackPanel>
+
+                    <!-- Services Column -->
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Services" Style="{StaticResource SectionHeaderText}"/>
+                        <ListView Style="{StaticResource CardListViewStyle}"
+                                  ItemContainerStyle="{StaticResource CardListViewItemStyle}"
+                                  ItemTemplate="{StaticResource ProfileItemCardTemplate}"
+                                  ItemsSource="{Binding CardServicesView}"
+                                  PreviewMouseWheel="ListView_PreviewMouseWheel">
+                            <ListView.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ListView.ItemsPanel>
+                        </ListView>
+                    </StackPanel>
+                </Grid>
+
+                <DockPanel Margin="0,30,0,10">
+                    <ComboBox DockPanel.Dock="Right" Width="150"
+                              ItemsSource="{Binding NeedsReviewTypeFilters}"
+                              SelectedItem="{Binding SelectedNeedsReviewTypeFilter}"
+                              Style="{StaticResource ProfileComboBoxStyle}"
+                              ItemContainerStyle="{StaticResource ProfileComboBoxItemStyle}"/>
+                    <TextBlock Text="New Items Found (Needs Review)" Style="{StaticResource SectionHeaderText}"/>
+                </DockPanel>
+                <ListView Style="{StaticResource CardListViewStyle}"
+                          ItemContainerStyle="{StaticResource CardListViewItemStyle}"
+                          ItemTemplate="{StaticResource NeedsReviewCardTemplate}"
+                          ItemsSource="{Binding NeedsReviewView}"
+                          PreviewMouseWheel="ListView_PreviewMouseWheel">
+                    <ListView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ListView.ItemsPanel>
+                    </ListView>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Item Settings Drawer Overlay -->
+        <Grid Grid.RowSpan="5" Panel.ZIndex="100"
+              IsHitTestVisible="{Binding IsItemSettingsPanelOpen}">
+
+            <!-- Semi-transparent backdrop (click to close) -->
+            <Border>
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Background" Value="#AA000000"/>
+                        <Setter Property="Opacity" Value="0"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsItemSettingsPanelOpen}" Value="True">
+                                <DataTrigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.2"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </DataTrigger.EnterActions>
+                                <DataTrigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.15"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </DataTrigger.ExitActions>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick"
+                                  Command="{Binding CloseItemSettingsPanelCommand}"/>
+                </Border.InputBindings>
+            </Border>
+
+            <!-- Drawer Panel - slides in from right -->
+            <Border HorizontalAlignment="Right" Width="380"
+                    Background="{StaticResource BackgroundTertiary}"
+                    BorderBrush="{StaticResource BackgroundQuaternary}"
+                    BorderThickness="1,0,0,0">
+                <Border.RenderTransform>
+                    <TranslateTransform X="380"/>
+                </Border.RenderTransform>
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsItemSettingsPanelOpen}" Value="True">
+                                <DataTrigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation
+                                                Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                To="0" Duration="0:0:0.25">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </DataTrigger.EnterActions>
+                                <DataTrigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation
+                                                Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                To="380" Duration="0:0:0.2"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </DataTrigger.ExitActions>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+
+                <!-- Drawer content bound to ActiveSettingsItem -->
+                <ContentPresenter Content="{Binding ActiveSettingsItem}">
+                    <ContentPresenter.ContentTemplate>
+                        <DataTemplate>
+                            <Grid Margin="24">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Header -->
+                                <DockPanel Grid.Row="0" Margin="0,0,0,16">
+                                    <Button DockPanel.Dock="Right" Content="✕" FontSize="16"
+                                            Command="{Binding DataContext.CloseItemSettingsPanelCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            Background="Transparent" BorderThickness="0"
+                                            Foreground="{StaticResource TextSecondary}" Cursor="Hand">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border Background="{TemplateBinding Background}" Padding="4">
+                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                    <TextBlock Text="Item Settings"
+                                               FontSize="18" FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextPrimary}"
+                                               VerticalAlignment="Center"/>
+                                </DockPanel>
+
+                                <!-- Identity + Path Section -->
+                                <StackPanel Grid.Row="1" Margin="0,0,0,8">
+                                    <TextBlock Text="DISPLAY NAME" FontSize="10" FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
+                                    <TextBox Text="{Binding EditDisplayName, UpdateSourceTrigger=PropertyChanged}"
+                                             Background="{StaticResource BackgroundQuaternary}"
+                                             Foreground="{StaticResource TextPrimary}"
+                                             CaretBrush="{StaticResource TextPrimary}"
+                                             Padding="8,6" BorderThickness="0" FontSize="13"/>
+
+                                    <TextBlock Text="DESIRED STATE" FontSize="10" FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextSecondary}" Margin="0,12,0,4"/>
+                                    <ComboBox ItemsSource="{x:Static vm:ProfileItemViewModel.DesiredStateOptions}"
+                                              SelectedItem="{Binding EditDesiredState, Mode=TwoWay}"
+                                              Style="{StaticResource ProfileComboBoxStyle}"
+                                              ItemContainerStyle="{StaticResource ProfileComboBoxItemStyle}"/>
+
+                                    <TextBlock Text="PATH" FontSize="10" FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextSecondary}" Margin="0,12,0,4"/>
+                                    <TextBlock Text="{Binding TargetPath}"
+                                               Foreground="{StaticResource TextMuted}"
+                                               FontSize="11" FontFamily="Consolas"
+                                               TextWrapping="Wrap"/>
+                                </StackPanel>
+
+                                <!-- Scrollable Settings -->
+                                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                                    <StackPanel Margin="0,8,0,0">
+
+                                        <!-- STARTUP BEHAVIOR -->
+                                        <TextBlock Text="STARTUP BEHAVIOR" FontSize="10" FontWeight="SemiBold"
+                                                   Foreground="{StaticResource AccentPrimary}" Margin="0,0,0,12"/>
+
+                                        <!-- Startup Delay -->
+                                        <DockPanel Margin="0,0,0,16">
+                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Width="80">
+                                                <TextBox Text="{Binding EditStartupDelaySeconds, UpdateSourceTrigger=PropertyChanged}"
+                                                         Width="55" TextAlignment="Center"
+                                                         Background="{StaticResource BackgroundQuaternary}"
+                                                         Foreground="{StaticResource TextPrimary}"
+                                                         CaretBrush="{StaticResource TextPrimary}"
+                                                         Padding="6,4" BorderThickness="0"/>
+                                                <TextBlock Text="s" Foreground="{StaticResource TextSecondary}"
+                                                           VerticalAlignment="Center" Margin="4,0,0,0"/>
+                                            </StackPanel>
+                                            <StackPanel Margin="0,0,8,0">
+                                                <TextBlock Text="Startup Delay"
+                                                           Foreground="{StaticResource TextPrimary}" FontSize="13"/>
+                                                <TextBlock Text="Wait before applying desired state"
+                                                           Foreground="{StaticResource TextSecondary}" FontSize="11"
+                                                           TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </DockPanel>
+
+                                        <!-- Battery Only -->
+                                        <DockPanel Margin="0,0,0,16">
+                                            <CheckBox DockPanel.Dock="Right"
+                                                      IsChecked="{Binding EditOnlyApplyOnBattery, Mode=TwoWay}"
+                                                      VerticalAlignment="Top"/>
+                                            <StackPanel Margin="0,0,8,0">
+                                                <TextBlock Text="Battery Mode Only"
+                                                           Foreground="{StaticResource TextPrimary}" FontSize="13"/>
+                                                <TextBlock Text="Only apply desired state when running on battery power"
+                                                           Foreground="{StaticResource TextSecondary}" FontSize="11"
+                                                           TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </DockPanel>
+
+                                        <!-- Force Minimized -->
+                                        <DockPanel Margin="0,0,0,24">
+                                            <CheckBox DockPanel.Dock="Right"
+                                                      IsChecked="{Binding EditForceMinimizedOnStart, Mode=TwoWay}"
+                                                      IsEnabled="{Binding IsEditDesiredRunning}"
+                                                      VerticalAlignment="Top"/>
+                                            <StackPanel Margin="0,0,8,0">
+                                                <TextBlock Text="Force Minimized on Start"
+                                                           Foreground="{StaticResource TextPrimary}" FontSize="13"/>
+                                                <TextBlock Text="Launch application in minimized state (only when desired state is Running)"
+                                                           Foreground="{StaticResource TextSecondary}" FontSize="11"
+                                                           TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </DockPanel>
+
+                                        <!-- ICON -->
+                                        <TextBlock Text="ICON" FontSize="10" FontWeight="SemiBold"
+                                                   Foreground="{StaticResource AccentPrimary}" Margin="0,0,0,10"/>
+
+                                        <!-- Current icon source path display -->
+                                        <Border Background="{StaticResource BackgroundQuaternary}"
+                                                CornerRadius="4" Padding="8,6" Margin="0,0,0,8">
+                                            <TextBlock Foreground="{StaticResource TextMuted}"
+                                                       FontSize="11" FontFamily="Consolas"
+                                                       TextTrimming="CharacterEllipsis">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="{Binding EditCustomIconPath}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding EditCustomIconPath}" Value="{x:Null}">
+                                                                <Setter Property="Text" Value="Using default (executable icon)"/>
+                                                                <Setter Property="FontStyle" Value="Italic"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding EditCustomIconPath}" Value="">
+                                                                <Setter Property="Text" Value="Using default (executable icon)"/>
+                                                                <Setter Property="FontStyle" Value="Italic"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+
+                                        <!-- Browse / Reset buttons -->
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                            <Button Content="Browse..."
+                                                    Style="{StaticResource SecondaryButtonStyle}"
+                                                    FontSize="12" Padding="10,6"
+                                                    Command="{Binding DataContext.BrowseForItemIconCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    Margin="0,0,8,0"/>
+                                            <Button Content="Reset to Default"
+                                                    Style="{StaticResource SecondaryButtonStyle}"
+                                                    FontSize="12" Padding="10,6"
+                                                    Command="{Binding DataContext.ResetItemIconCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"/>
+                                        </StackPanel>
+
+                                        <!-- Icon picker dropdown (visible when icons are loaded) -->
+                                        <StackPanel>
+                                            <TextBlock Text="SELECT ICON" FontSize="10" FontWeight="SemiBold"
+                                                       Foreground="{StaticResource TextSecondary}" Margin="0,0,0,6">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding AvailableIconOptions.Count}" Value="0">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <ComboBox ItemsSource="{Binding AvailableIconOptions}"
+                                                      SelectedItem="{Binding EditSelectedIconOption, Mode=TwoWay}"
+                                                      Background="{StaticResource BackgroundQuaternary}"
+                                                      Foreground="{StaticResource TextPrimary}"
+                                                      BorderBrush="{StaticResource BackgroundQuaternary}"
+                                                      MaxDropDownHeight="260">
+                                                <ComboBox.Style>
+                                                    <Style TargetType="ComboBox">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding AvailableIconOptions.Count}" Value="0">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </ComboBox.Style>
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Orientation="Horizontal" Margin="2,3">
+                                                            <Image Source="{Binding Image}"
+                                                                   Width="24" Height="24"
+                                                                   Margin="0,0,8,0"
+                                                                   RenderOptions.BitmapScalingMode="HighQuality"/>
+                                                            <TextBlock Text="{Binding Label}"
+                                                                       VerticalAlignment="Center"
+                                                                       Foreground="{StaticResource TextPrimary}"
+                                                                       FontSize="12"/>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+                                        </StackPanel>
+
+                                    </StackPanel>
+                                </ScrollViewer>
+
+                                <!-- Footer -->
+                                <StackPanel Grid.Row="3" Margin="0,16,0,0">
+                                    <!-- Save / Cancel -->
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button Grid.Column="0" Content="Save Changes"
+                                                Style="{StaticResource PrimaryButtonStyle}"
+                                                Command="{Binding DataContext.SaveProfileItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"
+                                                Padding="0,10"/>
+                                        <Button Grid.Column="2" Content="Cancel"
+                                                Style="{StaticResource SecondaryButtonStyle}"
+                                                Command="{Binding DataContext.CloseItemSettingsPanelCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                Padding="0,10"/>
+                                    </Grid>
+                                    <!-- Remove from Profile -->
+                                    <Button Content="Remove from Profile"
+                                            Style="{StaticResource DangerButtonStyle}"
+                                            HorizontalAlignment="Stretch"
+                                            Padding="0,10"
+                                            Command="{Binding DataContext.RemoveProfileItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}"/>
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ContentPresenter.ContentTemplate>
+                </ContentPresenter>
+            </Border>
+        </Grid>
+
+        <!-- Footer Row -->
+        <Grid Grid.Row="4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Settings Button (Left) -->
+                <Button Grid.Column="0"
+                        Content="Settings"
+                        Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding OpenSettingsCommand}"
+                        HorizontalAlignment="Left"/>
+
+                <!-- Apply Button (Right) in Blue Bar -->
+                <Border Grid.Column="2"
+                        Background="{StaticResource AccentPrimary}"
+                        CornerRadius="4"
+                        Padding="0"
+                        HorizontalAlignment="Right">
+                    <Button Style="{StaticResource PrimaryButtonStyle}"
+                            Background="Transparent"
+                            Padding="30,12"
+                            Command="{Binding ApplyCommand}">
+                        <Button.Content>
+                            <TextBlock>
+                                <Run Text="Apply '"/>
+                                <Run Text="{Binding SelectedProfile.Name, Mode=OneWay}"/>
+                                <Run Text="' Profile (Ctrl+S)"/>
+                            </TextBlock>
+                        </Button.Content>
+                    </Button>
+                </Border>
+            </Grid>
+    </Grid>
+</Window>

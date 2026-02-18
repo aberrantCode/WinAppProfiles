@@ -1,0 +1,364 @@
+<Window x:Class="WinAppProfiles.UI.Views.TabbedWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:models="clr-namespace:WinAppProfiles.Core.Models;assembly=WinAppProfiles.Core"
+        xmlns:vm="clr-namespace:WinAppProfiles.UI.ViewModels"
+        mc:Ignorable="d"
+        Title="WinAppProfiles" Height="650" Width="1100"
+        Icon="/assets/logo.ico"
+        Style="{DynamicResource {x:Type Window}}">
+    <Window.InputBindings>
+        <KeyBinding Key="S" Modifiers="Control" Command="{Binding ApplyCommand}"/>
+    </Window.InputBindings>
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="..\Resources\TabbedWindowStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <ObjectDataProvider x:Key="DesiredStateValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+                <ObjectDataProvider.MethodParameters>
+                    <x:Type TypeName="models:DesiredState" />
+                </ObjectDataProvider.MethodParameters>
+            </ObjectDataProvider>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="240"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Style="{StaticResource NavigationPanelBorderStyle}">
+            <DockPanel>
+                <!-- Profile Creation Form -->
+                <Border DockPanel.Dock="Bottom"
+                        Visibility="{Binding IsCreatingProfile, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        Background="{StaticResource BackgroundTertiary}"
+                        BorderBrush="{StaticResource BorderColor}"
+                        BorderThickness="0,1,0,0"
+                        Padding="10">
+                    <StackPanel>
+                        <TextBlock Text="New Profile Name:" Margin="0,0,0,5" Foreground="{StaticResource TextPrimary}"/>
+                        <TextBox Text="{Binding NewProfileName, UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,0,0,10"
+                                 Padding="8,6"
+                                 Background="{StaticResource BackgroundSecondary}"
+                                 Foreground="{StaticResource TextPrimary}"
+                                 BorderThickness="0"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="Create" Command="{Binding SaveNewProfileCommand}"
+                                    Style="{StaticResource AccentHeaderButtonStyle}"
+                                    Padding="15,6"
+                                    Margin="0,0,5,0"/>
+                            <Button Content="Cancel" Command="{Binding CancelNewProfileCommand}"
+                                    Style="{StaticResource SecondaryHeaderButtonStyle}"
+                                    Padding="15,6"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Button DockPanel.Dock="Bottom" Margin="10" Style="{StaticResource TransparentHeaderButtonStyle}"
+                        Command="{Binding NewProfileCommand}">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="New Profile..."/>
+                    </StackPanel>
+                </Button>
+                <ListView Style="{StaticResource NavigationListViewStyle}"
+                          ItemsSource="{Binding Profiles}"
+                          SelectedItem="{Binding SelectedProfile}">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE7C3;" FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </DockPanel>
+        </Border>
+
+        <DockPanel Grid.Column="1">
+            <Border DockPanel.Dock="Top" Style="{StaticResource HeaderPanelBorderStyle}">
+                <DockPanel>
+                    <TextBlock Text="{Binding SelectedProfile.Name}" Style="{StaticResource HeaderTextStyle}"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Style="{StaticResource SecondaryHeaderButtonStyle}"
+                                Command="{Binding ApplyCommand}">
+                            <Button.Content>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Apply Profile"/>
+                                </StackPanel>
+                            </Button.Content>
+                        </Button>
+                        <Button Style="{StaticResource SecondaryHeaderButtonStyle}"
+                                Command="{Binding SaveCommand}">
+                            <Button.Content>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE74E;" FontFamily="Segoe MDL2 Assets" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Save Profile"/>
+                                </StackPanel>
+                            </Button.Content>
+                        </Button>
+                        <Button Style="{StaticResource AccentHeaderButtonStyle}"
+                                Command="{Binding RefreshCommand}">
+                            <Button.Content>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE709;" FontFamily="Segoe MDL2 Assets" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Discover New Items"/>
+                                </StackPanel>
+                            </Button.Content>
+                        </Button>
+                        <Button Style="{StaticResource TransparentHeaderButtonStyle}"
+                                Command="{Binding OpenSettingsCommand}">
+                            <Button.Content>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Settings"/>
+                                </StackPanel>
+                            </Button.Content>
+                        </Button>
+                        <Button Style="{StaticResource SecondaryHeaderButtonStyle}"
+                                Click="SwitchView_Click">
+                            <Button.Content>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🗂️" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Switch to Card View"/>
+                                </StackPanel>
+                            </Button.Content>
+                        </Button>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <StatusBar DockPanel.Dock="Bottom" Style="{StaticResource {x:Type StatusBar}}">
+                <StatusBarItem>
+                    <TextBlock Text="{Binding StatusMessage}"/>
+                </StatusBarItem>
+                <StatusBarItem HorizontalAlignment="Right">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Dark Mode" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <CheckBox IsChecked="{Binding IsDarkMode}" VerticalAlignment="Center" Style="{StaticResource DarkModeToggleSwitchStyle}"/>
+                    </StackPanel>
+                </StatusBarItem>
+            </StatusBar>
+
+            <TabControl Style="{StaticResource MainTabControlStyle}">
+                <!-- Tab 1: All Items -->
+                <TabItem Header="All Items">
+                    <DataGrid ItemsSource="{Binding SelectedProfileItems}"
+                              SelectedItem="{Binding SelectedProfileItem, Mode=TwoWay}"
+                              SelectionChanged="ProfileItemsDataGrid_SelectionChanged"
+                              IsReadOnly="{Binding IsAdvancedMode, Converter={StaticResource BooleanInverterConverter}}">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Icon" Width="50">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Image Source="{Binding Icon}" Width="24" Height="24" Margin="5"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Name" Binding="{Binding DisplayName}" Width="2*"/>
+                            <DataGridTextColumn Header="Type" Binding="{Binding TargetType}" Width="1*"/>
+                            <DataGridTemplateColumn Header="Current State" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource StatusBadgeStyle}">
+                                            <TextBlock Text="{Binding CurrentState}" Foreground="{Binding Path=(Control.Foreground), RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Border}}}"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Desired State" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox SelectedItem="{Binding DesiredState, Mode=TwoWay}"
+                                                  ItemsSource="{Binding Source={StaticResource DesiredStateValues}}"
+                                                  Style="{StaticResource DataGridComboBoxStyle}"
+                                                  ItemContainerStyle="{StaticResource DataGridComboBoxItemStyle}">
+                                        </ComboBox>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </TabItem>
+
+                <!-- Tab 2: Applications -->
+                <TabItem Header="Applications">
+                    <DataGrid ItemsSource="{Binding CardApplicationsView}"
+                              SelectedItem="{Binding SelectedProfileItem, Mode=TwoWay}"
+                              IsReadOnly="{Binding IsAdvancedMode, Converter={StaticResource BooleanInverterConverter}}">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Icon" Width="50">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Image Source="{Binding Icon}" Width="24" Height="24" Margin="5"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Name" Binding="{Binding DisplayName}" Width="2*"/>
+                            <DataGridTemplateColumn Header="Current State" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource StatusBadgeStyle}">
+                                            <TextBlock Text="{Binding CurrentState}" Foreground="{Binding Path=(Control.Foreground), RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Border}}}"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Desired State" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox SelectedItem="{Binding DesiredState, Mode=TwoWay}"
+                                                  ItemsSource="{Binding Source={StaticResource DesiredStateValues}}"
+                                                  Style="{StaticResource DataGridComboBoxStyle}"
+                                                  ItemContainerStyle="{StaticResource DataGridComboBoxItemStyle}">
+                                        </ComboBox>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </TabItem>
+
+                <!-- Tab 3: Services -->
+                <TabItem Header="Services">
+                    <DataGrid ItemsSource="{Binding CardServicesView}"
+                              SelectedItem="{Binding SelectedProfileItem, Mode=TwoWay}"
+                              IsReadOnly="{Binding IsAdvancedMode, Converter={StaticResource BooleanInverterConverter}}">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Icon" Width="50">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Image Source="{Binding Icon}" Width="24" Height="24" Margin="5"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Name" Binding="{Binding DisplayName}" Width="2*"/>
+                            <DataGridTemplateColumn Header="Current State" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource StatusBadgeStyle}">
+                                            <TextBlock Text="{Binding CurrentState}" Foreground="{Binding Path=(Control.Foreground), RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Border}}}"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Desired State" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox SelectedItem="{Binding DesiredState, Mode=TwoWay}"
+                                                  ItemsSource="{Binding Source={StaticResource DesiredStateValues}}"
+                                                  Style="{StaticResource DataGridComboBoxStyle}"
+                                                  ItemContainerStyle="{StaticResource DataGridComboBoxItemStyle}">
+                                        </ComboBox>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </TabItem>
+
+                <!-- Tab 4: Needs Review -->
+                <TabItem Header="Needs Review">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Filter bar -->
+                        <DockPanel Grid.Row="0" Margin="15,10">
+                            <TextBox DockPanel.Dock="Right" Width="250"
+                                     Text="{Binding NeedsReviewSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                     Background="{StaticResource BackgroundTertiary}"
+                                     Foreground="{StaticResource TextPrimary}"
+                                     BorderThickness="0"
+                                     Padding="10,6"
+                                     FontSize="14">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="TextBox">
+                                                    <Border Background="{TemplateBinding Background}"
+                                                            CornerRadius="4"
+                                                            Padding="{TemplateBinding Padding}">
+                                                        <Grid>
+                                                            <TextBlock Text="Search..."
+                                                                       Foreground="{StaticResource TextMuted}"
+                                                                       IsHitTestVisible="False"
+                                                                       Visibility="{Binding Text.IsEmpty, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                            <ScrollViewer x:Name="PART_ContentHost" />
+                                                        </Grid>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+                            <ComboBox DockPanel.Dock="Right" Width="150" Margin="0,0,10,0"
+                                      ItemsSource="{Binding NeedsReviewTypeFilters}"
+                                      SelectedItem="{Binding SelectedNeedsReviewTypeFilter}"
+                                      Style="{StaticResource DataGridComboBoxStyle}"
+                                      ItemContainerStyle="{StaticResource DataGridComboBoxItemStyle}"/>
+                            <TextBlock Text="Needs Review"
+                                       Style="{StaticResource HeaderTextStyle}"
+                                       FontSize="16"/>
+                        </DockPanel>
+
+                        <!-- Needs Review DataGrid -->
+                        <DataGrid Grid.Row="1"
+                                  ItemsSource="{Binding NeedsReviewView}"
+                                  SelectedItem="{Binding SelectedNeedsReviewItem, Mode=TwoWay}"
+                                  SelectionChanged="NeedsReviewDataGrid_SelectionChanged"
+                                  MouseDoubleClick="NeedsReviewDataGrid_MouseDoubleClick">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="Icon" Width="50">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Image Source="{Binding Icon}" Width="24" Height="24" Margin="5"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Name" Binding="{Binding DisplayName}" Width="2*"/>
+                                <DataGridTextColumn Header="Type" Binding="{Binding TargetType}" Width="1*"/>
+                                <DataGridTemplateColumn Header="Current State" Width="120">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Style="{StaticResource StatusBadgeStyle}">
+                                                <TextBlock Text="{Binding CurrentState}" Foreground="{Binding Path=(Control.Foreground), RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Border}}}"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Actions" Width="120">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="Add to Profile"
+                                                    Command="{Binding DataContext.PromoteNeedsReviewItemCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type DataGrid}}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource SecondaryHeaderButtonStyle}"
+                                                    Padding="8,4"
+                                                    FontSize="12"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </TabItem>
+            </TabControl>
+
+        </DockPanel>
+    </Grid>
+</Window>

@@ -8,8 +8,11 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $slnPath = Join-Path $repoRoot "WinAppProfiles.sln"
 $exePath = Join-Path $repoRoot "src\WinAppProfiles.UI\bin\$Configuration\net8.0-windows\WinAppProfiles.UI.exe"
 
-$dotnet = (Get-Command dotnet -ErrorAction SilentlyContinue)?.Source
-if (-not $dotnet) {
+$dotnetCommand = Get-Command dotnet -ErrorAction SilentlyContinue
+if ($dotnetCommand) {
+    $dotnet = $dotnetCommand.Source
+}
+else {
     $dotnet = "C:\Program Files\dotnet\dotnet.exe"
 }
 if (-not (Test-Path $dotnet)) {

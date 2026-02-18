@@ -91,6 +91,13 @@ public partial class MainWindow : Window
         _notifyIcon.ContextMenuStrip = contextMenu;
     }
 
+    public void MinimizeToTray()
+    {
+        Hide();
+        if (_notifyIcon is not null)
+            _notifyIcon.Visible = true;
+    }
+
     private void DisposeNotifyIcon()
     {
         if (_notifyIcon is not null)

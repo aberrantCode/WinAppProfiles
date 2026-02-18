@@ -11,6 +11,11 @@ public sealed class ProfileItem
     public string? ServiceName { get; set; }
     public DesiredState DesiredState { get; set; }
     public bool IsReviewed { get; set; }
+    public int StartupDelaySeconds { get; set; } = 0;
+    public bool OnlyApplyOnBattery { get; set; } = false;
+    public bool ForceMinimizedOnStart { get; set; } = false;
+    public string? CustomIconPath { get; set; }
+    public int IconIndex { get; set; } = 0;
 
     public string IdentityKey()
     {

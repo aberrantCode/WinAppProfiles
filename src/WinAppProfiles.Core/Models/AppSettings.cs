@@ -8,6 +8,7 @@ public sealed class AppSettings
     public bool MinimizeOnLaunch { get; set; } = false;
     public bool MinimizeToTrayOnClose { get; set; } = false;
     public InterfaceType DefaultInterfaceType { get; set; } = InterfaceType.Tabbed;
+    public int StatusPollingIntervalSeconds { get; set; } = 5;
 
     public AppSettings Clone()
     {
@@ -18,7 +19,8 @@ public sealed class AppSettings
             EnableDarkMode = this.EnableDarkMode,
             MinimizeOnLaunch = this.MinimizeOnLaunch,
             MinimizeToTrayOnClose = this.MinimizeToTrayOnClose,
-            DefaultInterfaceType = this.DefaultInterfaceType
+            DefaultInterfaceType = this.DefaultInterfaceType,
+            StatusPollingIntervalSeconds = this.StatusPollingIntervalSeconds
         };
     }
 
@@ -30,11 +32,12 @@ public sealed class AppSettings
                EnableDarkMode == settings.EnableDarkMode &&
                MinimizeOnLaunch == settings.MinimizeOnLaunch &&
                MinimizeToTrayOnClose == settings.MinimizeToTrayOnClose &&
-               DefaultInterfaceType == settings.DefaultInterfaceType;
+               DefaultInterfaceType == settings.DefaultInterfaceType &&
+               StatusPollingIntervalSeconds == settings.StatusPollingIntervalSeconds;
     }
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(DefaultProfileId, AutoApplyDefaultProfile, EnableDarkMode, MinimizeOnLaunch, MinimizeToTrayOnClose, DefaultInterfaceType);
+        return HashCode.Combine(DefaultProfileId, AutoApplyDefaultProfile, EnableDarkMode, MinimizeOnLaunch, MinimizeToTrayOnClose, DefaultInterfaceType, StatusPollingIntervalSeconds);
     }
 }
