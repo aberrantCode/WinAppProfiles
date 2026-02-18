@@ -7,17 +7,17 @@
         Title="Create New Profile" Height="450" Width="600"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        Background="#1E1E1E">
+        Background="#0D0D0F">
     <Window.Resources>
-        <!-- Color Resources -->
-        <SolidColorBrush x:Key="BackgroundPrimary" Color="#1E1E1E"/>
-        <SolidColorBrush x:Key="BackgroundSecondary" Color="#2D2D30"/>
-        <SolidColorBrush x:Key="BackgroundTertiary" Color="#3E3E42"/>
-        <SolidColorBrush x:Key="TextPrimary" Color="#E0E0E0"/>
-        <SolidColorBrush x:Key="TextSecondary" Color="#B0B0B0"/>
-        <SolidColorBrush x:Key="AccentPrimary" Color="#0078D4"/>
-        <SolidColorBrush x:Key="AccentHover" Color="#1084D8"/>
-        <SolidColorBrush x:Key="AccentPressed" Color="#006CBE"/>
+        <!-- Color Resources — Precision Dark -->
+        <SolidColorBrush x:Key="BackgroundPrimary" Color="#0D0D0F"/>
+        <SolidColorBrush x:Key="BackgroundSecondary" Color="#1A1A20"/>
+        <SolidColorBrush x:Key="BackgroundTertiary" Color="#262630"/>
+        <SolidColorBrush x:Key="TextPrimary" Color="#F1F0F5"/>
+        <SolidColorBrush x:Key="TextSecondary" Color="#9993B4"/>
+        <SolidColorBrush x:Key="AccentPrimary" Color="#7C6FCD"/>
+        <SolidColorBrush x:Key="AccentHover" Color="#8B7FD8"/>
+        <SolidColorBrush x:Key="AccentPressed" Color="#6B5EBF"/>
 
         <!-- Button Styles -->
         <Style x:Key="WizardButtonStyle" TargetType="Button">

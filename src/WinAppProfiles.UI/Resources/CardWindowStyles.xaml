@@ -4,29 +4,30 @@
 
     <vm:BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
-    <!-- Color Palette - Matching Mock -->
-    <SolidColorBrush x:Key="BackgroundPrimary" Color="#121212"/><!-- Window background (darkest) -->
-    <SolidColorBrush x:Key="BackgroundSecondary" Color="#1E1E1E"/><!-- Panel background -->
-    <SolidColorBrush x:Key="BackgroundTertiary" Color="#252525"/><!-- Search box background -->
-    <SolidColorBrush x:Key="BackgroundQuaternary" Color="#2B2B2B"/><!-- Card background (lightest) -->
+    <!-- Color Palette - Precision Dark -->
+    <SolidColorBrush x:Key="BackgroundPrimary" Color="#0D0D0F"/><!-- Window background (darkest) -->
+    <SolidColorBrush x:Key="BackgroundSecondary" Color="#1A1A20"/><!-- Panel background -->
+    <SolidColorBrush x:Key="BackgroundTertiary" Color="#222228"/><!-- Search box background -->
+    <SolidColorBrush x:Key="BackgroundQuaternary" Color="#16161A"/><!-- Card background -->
+    <SolidColorBrush x:Key="CardBorderBrush" Color="#2A2A35"/><!-- Card/panel borders -->
 
-    <SolidColorBrush x:Key="TextPrimary" Color="#E0E0E0"/>
-    <SolidColorBrush x:Key="TextSecondary" Color="#B0B0B0"/>
-    <SolidColorBrush x:Key="TextMuted" Color="#808080"/>
+    <SolidColorBrush x:Key="TextPrimary" Color="#F1F0F5"/>
+    <SolidColorBrush x:Key="TextSecondary" Color="#9993B4"/>
+    <SolidColorBrush x:Key="TextMuted" Color="#6B6783"/>
 
-    <SolidColorBrush x:Key="AccentPrimary" Color="#0078D4"/>
-    <SolidColorBrush x:Key="AccentHover" Color="#1084D8"/>
-    <SolidColorBrush x:Key="AccentPressed" Color="#006CBE"/>
+    <SolidColorBrush x:Key="AccentPrimary" Color="#7C6FCD"/>
+    <SolidColorBrush x:Key="AccentHover" Color="#8B7FD8"/>
+    <SolidColorBrush x:Key="AccentPressed" Color="#6B5EBF"/>
 
-    <SolidColorBrush x:Key="StatusRunning" Color="#28A745"/>
-    <SolidColorBrush x:Key="StatusStopped" Color="#DC3545"/>
-    <SolidColorBrush x:Key="StatusError" Color="#DC3545"/>
-    <SolidColorBrush x:Key="StatusNotFound" Color="#6C757D"/>
-    <SolidColorBrush x:Key="StatusUnknown" Color="#FFC107"/>
+    <SolidColorBrush x:Key="StatusRunning" Color="#22C55E"/>
+    <SolidColorBrush x:Key="StatusStopped" Color="#EF4444"/>
+    <SolidColorBrush x:Key="StatusError" Color="#EF4444"/>
+    <SolidColorBrush x:Key="StatusNotFound" Color="#6B7280"/>
+    <SolidColorBrush x:Key="StatusUnknown" Color="#F59E0B"/>
 
-    <SolidColorBrush x:Key="IconPlaceholder" Color="#555555"/>
-    <SolidColorBrush x:Key="ToggleOff" Color="#3E3E42"/>
-    <SolidColorBrush x:Key="ToggleOffKnob" Color="#B0B0B0"/>
+    <SolidColorBrush x:Key="IconPlaceholder" Color="#3A3A45"/>
+    <SolidColorBrush x:Key="ToggleOff" Color="#2A2A35"/>
+    <SolidColorBrush x:Key="ToggleOffKnob" Color="#9993B4"/>
 
     <!-- Typography -->
     <Style x:Key="HeaderText" TargetType="TextBlock">
@@ -93,18 +94,12 @@
     <DataTemplate x:Key="ProfileItemCardTemplate">
         <Border x:Name="CardBorder"
                 Background="{StaticResource BackgroundQuaternary}"
-                CornerRadius="8"
+                CornerRadius="6"
                 Width="180"
                 Margin="0,0,15,0"
-                Padding="15">
-            <Border.Effect>
-                <DropShadowEffect Color="Black"
-                                  Opacity="0.6"
-                                  ShadowDepth="4"
-                                  BlurRadius="15"
-                                  Direction="270"
-                                  RenderingBias="Quality"/>
-            </Border.Effect>
+                Padding="15"
+                BorderBrush="{StaticResource CardBorderBrush}"
+                BorderThickness="1">
             <Border.Style>
                 <Style TargetType="Border">
                     <Setter Property="Height" Value="200"/>
@@ -246,19 +241,13 @@
     <!-- Needs Review Card Template -->
     <DataTemplate x:Key="NeedsReviewCardTemplate">
         <Border Background="{StaticResource BackgroundQuaternary}"
-                CornerRadius="8"
+                CornerRadius="6"
                 Width="180"
                 Height="200"
                 Margin="0,0,15,0"
-                Padding="15">
-            <Border.Effect>
-                <DropShadowEffect Color="Black"
-                                  Opacity="0.6"
-                                  ShadowDepth="4"
-                                  BlurRadius="15"
-                                  Direction="270"
-                                  RenderingBias="Quality"/>
-            </Border.Effect>
+                Padding="15"
+                BorderBrush="{StaticResource CardBorderBrush}"
+                BorderThickness="1">
             <StackPanel>
                 <!-- Application Icon -->
                 <Border Width="64"
@@ -305,10 +294,10 @@
                             </Setter>
                             <Style.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#4E4E52"/>
+                                    <Setter Property="Background" Value="#2E2E3A"/>
                                 </Trigger>
                                 <Trigger Property="IsPressed" Value="True">
-                                    <Setter Property="Background" Value="#2E2E32"/>
+                                    <Setter Property="Background" Value="#1E1E26"/>
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
@@ -355,7 +344,7 @@
     <!-- Secondary Button Style -->
     <Style x:Key="SecondaryButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="{StaticResource BackgroundTertiary}"/>
-        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Padding" Value="15,10"/>
@@ -374,10 +363,10 @@
         </Setter>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="#4E4E52"/>
+                <Setter Property="Background" Value="#2E2E3A"/>
             </Trigger>
             <Trigger Property="IsPressed" Value="True">
-                <Setter Property="Background" Value="#2E2E32"/>
+                <Setter Property="Background" Value="#1E1E26"/>
             </Trigger>
             <Trigger Property="IsEnabled" Value="False">
                 <Setter Property="Opacity" Value="0.5"/>
@@ -387,7 +376,7 @@
 
     <!-- Danger Button Style (remove/delete actions) -->
     <Style x:Key="DangerButtonStyle" TargetType="Button">
-        <Setter Property="Background" Value="#C0392B"/>
+        <Setter Property="Background" Value="#BE2A2A"/>
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="BorderThickness" Value="0"/>
@@ -406,10 +395,10 @@
         </Setter>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="#E74C3C"/>
+                <Setter Property="Background" Value="#EF4444"/>
             </Trigger>
             <Trigger Property="IsPressed" Value="True">
-                <Setter Property="Background" Value="#A93226"/>
+                <Setter Property="Background" Value="#991B1B"/>
             </Trigger>
             <Trigger Property="IsEnabled" Value="False">
                 <Setter Property="Opacity" Value="0.5"/>
@@ -525,7 +514,7 @@
         </Setter>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="#4E4E52"/>
+                <Setter Property="Background" Value="#2E2E3A"/>
             </Trigger>
         </Style.Triggers>
     </Style>
@@ -572,10 +561,10 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter Property="Background" Value="#1A0078D4"/>
+                            <Setter Property="Background" Value="#1A7C6FCD"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="#0A0078D4"/>
+                            <Setter Property="Background" Value="#0A7C6FCD"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
