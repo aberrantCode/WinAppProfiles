@@ -1,10 +1,12 @@
 using System;
 using System.Drawing;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
+using System.Windows.Interop;
 using WinAppProfiles.Core.Abstractions;
 using WinAppProfiles.Core.Models;
 using WinAppProfiles.UI.ViewModels;
@@ -17,6 +19,15 @@ public partial class TabbedWindow : Window
     private NotifyIcon? _notifyIcon;
     private bool _isViewSwitch;
 
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+
+    private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+    private const int DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19;
+    private const int DWMWA_CAPTION_COLOR = 35;
+    // AccentPrimary #7C6FCD as COLORREF (0x00BBGGRR)
+    private const int AccentColorRef = unchecked((int)0x00CD6F7C);
+
     public TabbedWindow(MainViewModel viewModel, IAppSettingsRepository appSettingsRepository)
     {
         InitializeComponent();
@@ -24,7 +35,19 @@ public partial class TabbedWindow : Window
         _appSettingsRepository = appSettingsRepository;
 
         InitializeNotifyIcon();
+        Loaded += OnLoaded;
         Closing += OnClosing;
+    }
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        var hwnd = new WindowInteropHelper(this).Handle;
+        int darkMode = 1;
+        if (DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref darkMode, sizeof(int)) != 0)
+            DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ref darkMode, sizeof(int));
+
+        int color = AccentColorRef;
+        DwmSetWindowAttribute(hwnd, DWMWA_CAPTION_COLOR, ref color, sizeof(int));
     }
 
     private async void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)

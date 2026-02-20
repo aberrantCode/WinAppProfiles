@@ -25,6 +25,9 @@ public partial class CardWindow : Window
 
     private const int DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19;
     private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+    private const int DWMWA_CAPTION_COLOR = 35;
+    // AccentPrimary #7C6FCD as COLORREF (0x00BBGGRR)
+    private const int AccentColorRef = unchecked((int)0x00CD6F7C);
 
     public CardWindow(MainViewModel viewModel, IAppSettingsRepository appSettingsRepository)
     {
@@ -43,6 +46,9 @@ public partial class CardWindow : Window
         int darkMode = 1;
         if (DwmSetWindowAttribute(helper.Handle, DWMWA_USE_IMMERSIVE_DARK_MODE, ref darkMode, sizeof(int)) != 0)
             DwmSetWindowAttribute(helper.Handle, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ref darkMode, sizeof(int));
+
+        int color = AccentColorRef;
+        DwmSetWindowAttribute(helper.Handle, DWMWA_CAPTION_COLOR, ref color, sizeof(int));
     }
 
     private async void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
