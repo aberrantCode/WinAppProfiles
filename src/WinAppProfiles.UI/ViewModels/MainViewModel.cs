@@ -857,7 +857,7 @@ public sealed class MainViewModel : ObservableObject
         await LoadAsync();
     }
 
-    private async Task OpenProfileWizardAsync()
+    private Task OpenProfileWizardAsync()
     {
         var wizardViewModel = new ProfileCreationWizardViewModel(
             _profileService,
@@ -873,6 +873,7 @@ public sealed class MainViewModel : ObservableObject
 
         var wizardWindow = new Views.ProfileCreationWizard(wizardViewModel);
         wizardWindow.ShowDialog();
+        return Task.CompletedTask;
     }
 
     private async Task UpdateAllNeedsReviewStatesAsync()
