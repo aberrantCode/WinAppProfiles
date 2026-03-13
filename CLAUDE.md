@@ -193,3 +193,45 @@ Access services via `((App)Application.Current).Host.Services.GetRequiredService
 - Mock Core abstractions (IProfileService, IStateController, etc.)
 - Use NSubstitute or Moq for mocking
 - Test command execution and property change notifications
+
+## Design Context
+
+### Users
+Personal tool built by a developer for themselves — a Windows power user managing process/service profiles across dev environments, gaming sessions, or work setups. The user is deeply technical and expects an efficient, no-nonsense experience. Zero tolerance for UI that gets in the way.
+
+### Brand Personality
+**Powerful · Approachable · Clean**
+
+The interface should feel capable without being intimidating. It manages serious system-level state (process lifecycles, Windows services), so it must communicate authority and reliability — but without the cold austerity of a raw Sysinternals tool. Think: a tool you're proud to have in your workflow.
+
+### Aesthetic Direction
+- **Theme:** Dark only. The "Precision Dark" system is established and should not be diluted.
+- **Accent:** Indigo purple (`#7C6FCD`) — this is the brand signature. Lean into it deliberately.
+- **Depth:** Crisp 1px borders over drop shadows. High-DPI first. No blur, no glassmorphism.
+- **Typography:** Segoe UI. Clean hierarchy via weight (SemiBold headings, Regular body) and color (TextPrimary → TextSecondary → TextMuted).
+- **References:** No external references — the current aesthetic direction is correct and should be evolved, not replaced.
+- **Anti-references:** Avoid generic Windows-blue, cluttered toolbars, consumer app gradients, or anything that looks like a Settings page.
+
+### Design Principles
+1. **State is the hero.** Running/Stopped/Unknown status colors are the primary visual language. Every layout decision should make state immediately readable at a glance.
+2. **Purposeful, not decorative.** Every element earns its place. Add friction only where it prevents mistakes (e.g., delete confirmations). Remove it everywhere else.
+3. **Approachable power.** The tool handles advanced system control, but the UI should feel welcoming to use daily — not clinical. Rounded corners, comfortable spacing, and subtle hover states keep it human.
+4. **Motion with meaning.** The biggest current gap is animations and interactions. All transitions should feel intentional: hover reveals, state change feedback, apply-profile progress. Use WPF Storyboards with short durations (150–250ms) and easing. Never animate for decoration alone.
+5. **Consistency across both views.** CardWindow (visual) and TabbedWindow (data-dense) are two lenses on the same data. Shared tokens, shared status colors, shared button styles — the user should feel at home switching between them.
+
+### Key Design Tokens (Quick Reference)
+| Role | Value |
+|------|-------|
+| Accent | `#7C6FCD` |
+| Background primary | `#0D0D0F` |
+| Background card | `#16161A` |
+| Background control | `#222228` |
+| Text primary | `#F1F0F5` |
+| Text secondary | `#9993B4` |
+| Border | `#2A2A35` |
+| Running | `#22C55E` |
+| Stopped | `#EF4444` |
+| Unknown | `#F59E0B` |
+| Not found | `#6B7280` |
+
+Full design spec: `/interface-design/system.md`
