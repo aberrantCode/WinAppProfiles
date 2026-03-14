@@ -148,17 +148,7 @@ public partial class CardWindow : Window
     private void ProfileItemsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (DataContext is MainViewModel vm && sender is System.Windows.Controls.ListView lv)
-        {
             vm.UpdateProfileItemsSelection(lv.SelectedItems);
-            foreach (var item in vm.SelectedProfileItems)
-                item.IsSelected = lv.SelectedItems.Contains(item);
-        }
-    }
-
-    private void ClearCardSelection_Click(object sender, RoutedEventArgs e)
-    {
-        ProfileItemsList.UnselectAll();
-        // SelectionChanged fires → UpdateProfileItemsSelection clears the VM collection
     }
 
     private void ListView_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
