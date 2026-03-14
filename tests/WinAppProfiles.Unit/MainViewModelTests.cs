@@ -127,4 +127,109 @@ public class MainViewModelTests
 
         _viewModel.StatusMessage.Should().Contain($"Applied '{DesiredState.Stopped}' to 2 selected item(s).");
     }
+
+    [Fact]
+    public async Task CardSearchText_FiltersCardProfileItemsView()
+    {
+        // Arrange
+        var profileId = Guid.NewGuid();
+        var profile = new Profile { Id = profileId, Name = "Test", Items = new List<ProfileItem>() };
+        _mockProfileService.Setup(s => s.GetProfilesAsync(default)).ReturnsAsync([profile]);
+        _mockProfileService.Setup(s => s.UpdateProfileAsync(It.IsAny<Profile>(), default)).ReturnsAsync(profile);
+        await ((AsyncRelayCommand)_viewModel.RefreshCommand).ExecuteAsync(null);
+        _viewModel.SelectedProfile = profile;
+
+        var app = new ProfileItem { Id = Guid.NewGuid(), DisplayName = "Chrome", ProcessName = "chrome", TargetType = TargetType.Application };
+        var svc = new ProfileItem { Id = Guid.NewGuid(), DisplayName = "SQL Server", ServiceName = "MSSQLSERVER", TargetType = TargetType.Service };
+        _viewModel.SelectedProfileItems.Add(new ProfileItemViewModel(app, _mockStateController.Object, _mockProfileItemViewModelLogger.Object));
+        _viewModel.SelectedProfileItems.Add(new ProfileItemViewModel(svc, _mockStateController.Object, _mockProfileItemViewModelLogger.Object));
+
+        // Act
+        _viewModel.CardSearchText = "chrome";
+
+        // Assert
+        var visible = _viewModel.CardProfileItemsView.Cast<ProfileItemViewModel>().ToList();
+        visible.Should().HaveCount(1);
+        visible[0].DisplayName.Should().Be("Chrome");
+    }
+
+    [Fact]
+    public async Task SelectedCardTypeFilter_FiltersToApplicationsOnly()
+    {
+        // Arrange
+        var profileId = Guid.NewGuid();
+        var profile = new Profile { Id = profileId, Name = "Test", Items = new List<ProfileItem>() };
+        _mockProfileService.Setup(s => s.GetProfilesAsync(default)).ReturnsAsync([profile]);
+        _mockProfileService.Setup(s => s.UpdateProfileAsync(It.IsAny<Profile>(), default)).ReturnsAsync(profile);
+        await ((AsyncRelayCommand)_viewModel.RefreshCommand).ExecuteAsync(null);
+        _viewModel.SelectedProfile = profile;
+
+        var app = new ProfileItem { Id = Guid.NewGuid(), DisplayName = "Chrome", ProcessName = "chrome", TargetType = TargetType.Application };
+        var svc = new ProfileItem { Id = Guid.NewGuid(), DisplayName = "SQL Server", ServiceName = "MSSQLSERVER", TargetType = TargetType.Service };
+        _viewModel.SelectedProfileItems.Add(new ProfileItemViewModel(app, _mockStateController.Object, _mockProfileItemViewModelLogger.Object));
+        _viewModel.SelectedProfileItems.Add(new ProfileItemViewModel(svc, _mockStateController.Object, _mockProfileItemViewModelLogger.Object));
+
+        // Act
+        _viewModel.SelectedCardTypeFilter = "Applications";
+
+        // Assert
+        var visible = _viewModel.CardProfileItemsView.Cast<ProfileItemViewModel>().ToList();
+        visible.Should().HaveCount(1);
+        visible[0].TargetType.Should().Be(TargetType.Application);
+    }
+
+    [Fact]
+    public async Task BulkSetRunningCardCommand_SetsDesiredStateAndSaves()
+    {
+        // Arrange
+        var profileId = Guid.NewGuid();
+        var profile = new Profile { Id = profileId, Name = "Test", Items = new List<ProfileItem>() };
+        _mockProfileService.Setup(s => s.GetProfilesAsync(default)).ReturnsAsync([profile]);
+        _mockProfileService.Setup(s => s.UpdateProfileAsync(It.IsAny<Profile>(), default)).ReturnsAsync(profile);
+        await ((AsyncRelayCommand)_viewModel.RefreshCommand).ExecuteAsync(null);
+        _viewModel.SelectedProfile = profile;
+
+        var item1 = new ProfileItem { Id = Guid.NewGuid(), DisplayName = "Item 1", DesiredState = DesiredState.Stopped };
+        var vm1 = new ProfileItemViewModel(item1, _mockStateController.Object, _mockProfileItemViewModelLogger.Object);
+        _viewModel.SelectedProfileItems.Add(vm1);
+        _viewModel.UpdateProfileItemsSelection(new List<ProfileItemViewModel> { vm1 });
+
+        // Assert pre-condition
+        _viewModel.HasCardItemsSelection.Should().BeTrue();
+        _viewModel.CardSelectionCount.Should().Be(1);
+
+        // Act
+        _viewModel.BulkSetRunningCardCommand.Execute(null);
+
+        // Assert (DesiredState change and StatusMessage are synchronous)
+        item1.DesiredState.Should().Be(DesiredState.Running);
+        _viewModel.StatusMessage.Should().Contain("Set 'Running' on 1 selected item(s).");
+    }
+
+    [Fact]
+    public async Task ClearCardSelectionCommand_ClearsSelectionAndProperties()
+    {
+        // Arrange
+        var profileId = Guid.NewGuid();
+        var profile = new Profile { Id = profileId, Name = "Test", Items = new List<ProfileItem>() };
+        _mockProfileService.Setup(s => s.GetProfilesAsync(default)).ReturnsAsync([profile]);
+        _mockProfileService.Setup(s => s.UpdateProfileAsync(It.IsAny<Profile>(), default)).ReturnsAsync(profile);
+        await ((AsyncRelayCommand)_viewModel.RefreshCommand).ExecuteAsync(null);
+        _viewModel.SelectedProfile = profile;
+
+        var item1 = new ProfileItem { Id = Guid.NewGuid(), DisplayName = "Item 1", DesiredState = DesiredState.Running };
+        var vm1 = new ProfileItemViewModel(item1, _mockStateController.Object, _mockProfileItemViewModelLogger.Object);
+        vm1.IsSelected = true;
+        _viewModel.SelectedProfileItems.Add(vm1);
+        _viewModel.UpdateProfileItemsSelection(new List<ProfileItemViewModel> { vm1 });
+        _viewModel.HasCardItemsSelection.Should().BeTrue();
+
+        // Act
+        _viewModel.ClearCardSelectionCommand.Execute(null);
+
+        // Assert
+        _viewModel.HasCardItemsSelection.Should().BeFalse();
+        _viewModel.CardSelectionCount.Should().Be(0);
+        vm1.IsSelected.Should().BeFalse();
+    }
 }
