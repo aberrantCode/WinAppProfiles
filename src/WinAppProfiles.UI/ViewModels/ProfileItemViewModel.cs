@@ -26,6 +26,7 @@ public sealed class ProfileItemViewModel : ObservableObject
     private string? _editCustomIconPath;
     private int _editIconIndex;
     private IconOption? _editSelectedIconOption;
+    private bool _isSelected;
 
     public static IReadOnlyList<DesiredState> DesiredStateOptions { get; } =
         [DesiredState.Running, DesiredState.Stopped, DesiredState.Ignore];
@@ -96,6 +97,12 @@ public sealed class ProfileItemViewModel : ObservableObject
     {
         get => _exists;
         private set => SetProperty(ref _exists, value);
+    }
+
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set => SetProperty(ref _isSelected, value);
     }
 
     public string EditDisplayName
