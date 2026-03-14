@@ -14,7 +14,7 @@ using Microsoft.Extensions.Logging; // Added for ILoggerFactory
 
 namespace WinAppProfiles.UI.ViewModels;
 
-public sealed class MainViewModel : ObservableObject
+public sealed partial class MainViewModel : ObservableObject
 {
     private readonly IProfileService _profileService;
     private readonly IStateController _stateController;
@@ -42,8 +42,6 @@ public sealed class MainViewModel : ObservableObject
     private string _newProfileName = string.Empty;
     private string _needsReviewSearchText = string.Empty;
     private string _selectedNeedsReviewTypeFilter = "All";
-    private string _cardSearchText = string.Empty;
-    private string _selectedCardTypeFilter = "All";
     private readonly ObservableCollection<ProfileItemViewModel> _selectedNeedsReviewItems = [];
     private readonly ObservableCollection<ProfileItemViewModel> _selectedProfileItemsForBulkApply = [];
     private readonly AsyncRelayCommand _openSettingsCommand; // Declare the command
@@ -65,11 +63,6 @@ public sealed class MainViewModel : ObservableObject
     public ICommand BeginRenameProfileCommand { get; }
     public ICommand SaveProfileRenameCommand { get; }
     public ICommand CancelProfileRenameCommand { get; }
-    public ICommand BulkSetRunningCardCommand { get; }
-    public ICommand BulkSetStoppedCardCommand { get; }
-    public ICommand BulkSetIgnoreCardCommand { get; }
-    public ICommand ClearCardSelectionCommand { get; }
-
     public ProfileItemViewModel? ActiveSettingsItem
     {
         get => _activeSettingsItem;
@@ -147,17 +140,6 @@ public sealed class MainViewModel : ObservableObject
         SaveProfileRenameCommand = _saveProfileRenameCommand;
         CancelProfileRenameCommand = new RelayCommand(() => IsRenamingProfile = false);
 
-        BulkSetRunningCardCommand = new RelayCommand(
-            () => BulkSetCardDesiredState(DesiredState.Running),
-            () => HasCardItemsSelection);
-        BulkSetStoppedCardCommand = new RelayCommand(
-            () => BulkSetCardDesiredState(DesiredState.Stopped),
-            () => HasCardItemsSelection);
-        BulkSetIgnoreCardCommand = new RelayCommand(
-            () => BulkSetCardDesiredState(DesiredState.Ignore),
-            () => HasCardItemsSelection);
-        ClearCardSelectionCommand = new RelayCommand(ClearCardSelection);
-
         NeedsReviewView = CollectionViewSource.GetDefaultView(NeedsReviewItems);
         NeedsReviewView.Filter = NeedsReviewFilter;
 
@@ -167,11 +149,7 @@ public sealed class MainViewModel : ObservableObject
         CardServicesView = new CollectionViewSource { Source = SelectedProfileItems }.View;
         CardServicesView.Filter = CardServiceFilter;
 
-        // Unified card views — CardWindow-specific, separate from TabbedWindow views
-        CardProfileItemsView = new CollectionViewSource { Source = SelectedProfileItems }.View;
-        CardProfileItemsView.Filter = CardProfileItemsFilter;
-        CardNeedsReviewView = new CollectionViewSource { Source = NeedsReviewItems }.View;
-        CardNeedsReviewView.Filter = CardNeedsReviewFilter;
+        InitializeCardFeatures();
 
         _ = LoadAsync();
 
@@ -188,10 +166,7 @@ public sealed class MainViewModel : ObservableObject
     public ICollectionView NeedsReviewView { get; }
     public ICollectionView CardApplicationsView { get; } // Used by TabbedWindow
     public ICollectionView CardServicesView { get; }     // Used by TabbedWindow
-    public ICollectionView CardProfileItemsView { get; } // CardWindow unified view
-    public ICollectionView CardNeedsReviewView { get; }  // CardWindow needs-review view
     public IReadOnlyList<string> NeedsReviewTypeFilters { get; } = ["All", "Applications", "Services"];
-    public IReadOnlyList<string> CardTypeFilters { get; } = ["All", "Applications", "Services"];
 
     public ICommand RefreshCommand { get; }
     public ICommand ApplyCommand { get; }
@@ -317,32 +292,6 @@ public sealed class MainViewModel : ObservableObject
             NeedsReviewView.Refresh();
         }
     }
-
-    public string CardSearchText
-    {
-        get => _cardSearchText;
-        set
-        {
-            SetProperty(ref _cardSearchText, value);
-            CardProfileItemsView.Refresh();
-            CardNeedsReviewView.Refresh();
-        }
-    }
-
-    public string SelectedCardTypeFilter
-    {
-        get => _selectedCardTypeFilter;
-        set
-        {
-            SetProperty(ref _selectedCardTypeFilter, value);
-            CardProfileItemsView.Refresh();
-            CardNeedsReviewView.Refresh();
-        }
-    }
-
-    public bool HasCardItemsSelection => _selectedProfileItemsForBulkApply.Count > 0;
-
-    public int CardSelectionCount => _selectedProfileItemsForBulkApply.Count;
 
     private async Task LoadAsync()
     {
@@ -552,7 +501,7 @@ public sealed class MainViewModel : ObservableObject
         SelectedProfileItems.Remove(item);
         if (SelectedProfile is not null)
             SelectedProfile.Items = SelectedProfileItems.Select(x => x.GetModel()).ToList();
-        _ = SaveSelectedProfileAsync();
+        SaveProfileInBackground();
         ActiveSettingsItem = null;
         StatusMessage = $"Removed '{item.DisplayName}' from profile.";
     }
@@ -678,7 +627,7 @@ public sealed class MainViewModel : ObservableObject
     {
         if (item is null) return;
         item.ApplyEdits();
-        _ = SaveSelectedProfileAsync();
+        SaveProfileInBackground();
         RefreshItemIcon(item);
         StatusMessage = $"Saved '{item.DisplayName}'.";
         ActiveSettingsItem = null;
@@ -722,9 +671,7 @@ public sealed class MainViewModel : ObservableObject
         _applyBulkDesiredStateCommand.NotifyCanExecuteChanged();
         OnPropertyChanged(nameof(HasCardItemsSelection));
         OnPropertyChanged(nameof(CardSelectionCount));
-        ((RelayCommand)BulkSetRunningCardCommand).NotifyCanExecuteChanged();
-        ((RelayCommand)BulkSetStoppedCardCommand).NotifyCanExecuteChanged();
-        ((RelayCommand)BulkSetIgnoreCardCommand).NotifyCanExecuteChanged();
+        NotifyCardCommandsChanged();
     }
 
     private Task AddSelectedNeedsReviewAsync()
@@ -837,103 +784,44 @@ public sealed class MainViewModel : ObservableObject
         return viewModel;
     }
 
-    private bool NeedsReviewFilter(object candidate)
-    {
-        if (candidate is not ProfileItemViewModel item)
-        {
-            return false;
-        }
+    private bool NeedsReviewFilter(object candidate) =>
+        candidate is ProfileItemViewModel item &&
+        MatchesSearchFilter(item, SelectedNeedsReviewTypeFilter, NeedsReviewSearchText);
 
-        var typeMatches = SelectedNeedsReviewTypeFilter switch
+    internal static bool MatchesSearchFilter(ProfileItemViewModel item, string typeFilter, string searchText)
+    {
+        var typeMatches = typeFilter switch
         {
             "Applications" => item.TargetType == TargetType.Application,
             "Services" => item.TargetType == TargetType.Service,
             _ => true
         };
+        if (!typeMatches) return false;
 
-        if (!typeMatches)
-        {
-            return false;
-        }
+        var search = searchText.Trim();
+        if (string.IsNullOrWhiteSpace(search)) return true;
 
-        var search = NeedsReviewSearchText.Trim();
-        if (string.IsNullOrWhiteSpace(search))
-        {
-            return true;
-        }
-
-        var haystack = string.Join(
-            ' ',
+        var haystack = string.Join(' ',
             item.DisplayName ?? string.Empty,
             item.ProcessName ?? string.Empty,
             item.ServiceName ?? string.Empty).ToLowerInvariant();
 
-        var terms = search
+        return search
             .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Select(x => x.ToLowerInvariant());
-
-        // OR semantics across terms: keep row if any term matches anywhere in the indexed fields.
-        return terms.Any(term => haystack.Contains(term, StringComparison.Ordinal));
+            .Select(x => x.ToLowerInvariant())
+            .Any(term => haystack.Contains(term, StringComparison.Ordinal));
     }
 
-    private bool CardItemFilter(ProfileItemViewModel item)
+    private void SaveProfileInBackground()
     {
-        var typeMatches = SelectedCardTypeFilter switch
-        {
-            "Applications" => item.TargetType == TargetType.Application,
-            "Services" => item.TargetType == TargetType.Service,
-            _ => true
-        };
-
-        if (!typeMatches)
-            return false;
-
-        var search = CardSearchText.Trim();
-        if (string.IsNullOrWhiteSpace(search))
-            return true;
-
-        var haystack = string.Join(
-            ' ',
-            item.DisplayName ?? string.Empty,
-            item.ProcessName ?? string.Empty,
-            item.ServiceName ?? string.Empty).ToLowerInvariant();
-
-        var terms = search
-            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Select(x => x.ToLowerInvariant());
-
-        return terms.Any(term => haystack.Contains(term, StringComparison.Ordinal));
-    }
-
-    private bool CardProfileItemsFilter(object candidate) =>
-        candidate is ProfileItemViewModel item && CardItemFilter(item);
-
-    private bool CardNeedsReviewFilter(object candidate) =>
-        candidate is ProfileItemViewModel item && CardItemFilter(item);
-
-    private void BulkSetCardDesiredState(DesiredState state)
-    {
-        if (!_selectedProfileItemsForBulkApply.Any())
-            return;
-
-        foreach (var item in _selectedProfileItemsForBulkApply)
-            item.DesiredState = state;
-
-        _ = SaveSelectedProfileAsync();
-        StatusMessage = $"Set '{state}' on {_selectedProfileItemsForBulkApply.Count} selected item(s).";
-    }
-
-    private void ClearCardSelection()
-    {
-        foreach (var item in _selectedProfileItemsForBulkApply)
-            item.IsSelected = false;
-
-        _selectedProfileItemsForBulkApply.Clear();
-        OnPropertyChanged(nameof(HasCardItemsSelection));
-        OnPropertyChanged(nameof(CardSelectionCount));
-        ((RelayCommand)BulkSetRunningCardCommand).NotifyCanExecuteChanged();
-        ((RelayCommand)BulkSetStoppedCardCommand).NotifyCanExecuteChanged();
-        ((RelayCommand)BulkSetIgnoreCardCommand).NotifyCanExecuteChanged();
+        var scheduler = SynchronizationContext.Current is not null
+            ? TaskScheduler.FromCurrentSynchronizationContext()
+            : TaskScheduler.Default;
+        _ = SaveSelectedProfileAsync().ContinueWith(
+            t => StatusMessage = $"Error saving profile: {t.Exception?.InnerException?.Message ?? t.Exception?.Message}",
+            CancellationToken.None,
+            TaskContinuationOptions.OnlyOnFaulted,
+            scheduler);
     }
 
     private async Task ApplyBulkDesiredStateAsync()
