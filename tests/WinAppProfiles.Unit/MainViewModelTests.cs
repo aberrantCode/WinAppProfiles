@@ -102,7 +102,7 @@ public class MainViewModelTests
 
         var item1 = new ProfileItem { Id = Guid.NewGuid(), DisplayName = "Item 1", DesiredState = DesiredState.Running };
         var item2 = new ProfileItem { Id = Guid.NewGuid(), DisplayName = "Item 2", DesiredState = DesiredState.Running };
-        var item3 = new ProfileItem { Id = Guid.NewGuid(), DisplayName = "Item 3", DesiredState = DesiredState.Stopped };
+        var item3 = new ProfileItem { Id = Guid.NewGuid(), DisplayName = "Item 3", DesiredState = DesiredState.Running };
 
         _viewModel.SelectedProfileItems.Add(new ProfileItemViewModel(item1, _mockStateController.Object, _mockProfileItemViewModelLogger.Object));
         _viewModel.SelectedProfileItems.Add(new ProfileItemViewModel(item2, _mockStateController.Object, _mockProfileItemViewModelLogger.Object));
@@ -118,7 +118,7 @@ public class MainViewModelTests
         // Assert
         item1.DesiredState.Should().Be(DesiredState.Stopped);
         item2.DesiredState.Should().Be(DesiredState.Stopped);
-        item3.DesiredState.Should().Be(DesiredState.Stopped); // This should not change, as it was not selected
+        item3.DesiredState.Should().Be(DesiredState.Running); // Should not change — was not selected
 
         _mockProfileService.Verify(s => s.UpdateProfileAsync(
             It.Is<Profile>(p => p.Id == profileId &&
@@ -204,6 +204,102 @@ public class MainViewModelTests
         // Assert (DesiredState change and StatusMessage are synchronous)
         item1.DesiredState.Should().Be(DesiredState.Running);
         _viewModel.StatusMessage.Should().Contain("Set 'Running' on 1 selected item(s).");
+        _mockProfileService.Verify(s => s.UpdateProfileAsync(It.IsAny<Profile>(), default), Times.Once);
+    }
+
+    [Fact]
+    public async Task BulkSetStoppedCardCommand_SetsDesiredState()
+    {
+        // Arrange
+        var profileId = Guid.NewGuid();
+        var profile = new Profile { Id = profileId, Name = "Test", Items = new List<ProfileItem>() };
+        _mockProfileService.Setup(s => s.GetProfilesAsync(default)).ReturnsAsync([profile]);
+        _mockProfileService.Setup(s => s.UpdateProfileAsync(It.IsAny<Profile>(), default)).ReturnsAsync(profile);
+        await ((AsyncRelayCommand)_viewModel.RefreshCommand).ExecuteAsync(null);
+        _viewModel.SelectedProfile = profile;
+
+        var item1 = new ProfileItem { Id = Guid.NewGuid(), DisplayName = "Item 1", DesiredState = DesiredState.Running };
+        var vm1 = new ProfileItemViewModel(item1, _mockStateController.Object, _mockProfileItemViewModelLogger.Object);
+        _viewModel.SelectedProfileItems.Add(vm1);
+        _viewModel.UpdateProfileItemsSelection(new List<ProfileItemViewModel> { vm1 });
+
+        // Act
+        _viewModel.BulkSetStoppedCardCommand.Execute(null);
+
+        // Assert
+        item1.DesiredState.Should().Be(DesiredState.Stopped);
+        _viewModel.StatusMessage.Should().Contain("Set 'Stopped' on 1 selected item(s).");
+    }
+
+    [Fact]
+    public async Task BulkSetIgnoreCardCommand_SetsDesiredState()
+    {
+        // Arrange
+        var profileId = Guid.NewGuid();
+        var profile = new Profile { Id = profileId, Name = "Test", Items = new List<ProfileItem>() };
+        _mockProfileService.Setup(s => s.GetProfilesAsync(default)).ReturnsAsync([profile]);
+        _mockProfileService.Setup(s => s.UpdateProfileAsync(It.IsAny<Profile>(), default)).ReturnsAsync(profile);
+        await ((AsyncRelayCommand)_viewModel.RefreshCommand).ExecuteAsync(null);
+        _viewModel.SelectedProfile = profile;
+
+        var item1 = new ProfileItem { Id = Guid.NewGuid(), DisplayName = "Item 1", DesiredState = DesiredState.Running };
+        var vm1 = new ProfileItemViewModel(item1, _mockStateController.Object, _mockProfileItemViewModelLogger.Object);
+        _viewModel.SelectedProfileItems.Add(vm1);
+        _viewModel.UpdateProfileItemsSelection(new List<ProfileItemViewModel> { vm1 });
+
+        // Act
+        _viewModel.BulkSetIgnoreCardCommand.Execute(null);
+
+        // Assert
+        item1.DesiredState.Should().Be(DesiredState.Ignore);
+        _viewModel.StatusMessage.Should().Contain("Set 'Ignore' on 1 selected item(s).");
+    }
+
+    [Fact]
+    public async Task HasCardItemsSelection_FalseWhenNoItemsSelected()
+    {
+        // Arrange
+        var profileId = Guid.NewGuid();
+        var profile = new Profile { Id = profileId, Name = "Test", Items = new List<ProfileItem>() };
+        _mockProfileService.Setup(s => s.GetProfilesAsync(default)).ReturnsAsync([profile]);
+        await ((AsyncRelayCommand)_viewModel.RefreshCommand).ExecuteAsync(null);
+
+        // Assert — before any selection
+        _viewModel.HasCardItemsSelection.Should().BeFalse();
+        _viewModel.CardSelectionCount.Should().Be(0);
+
+        // Add item but do not select it
+        var item1 = new ProfileItem { Id = Guid.NewGuid(), DisplayName = "Item 1" };
+        var vm1 = new ProfileItemViewModel(item1, _mockStateController.Object, _mockProfileItemViewModelLogger.Object);
+        _viewModel.SelectedProfileItems.Add(vm1);
+
+        _viewModel.HasCardItemsSelection.Should().BeFalse();
+        _viewModel.CardSelectionCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task SelectedCardTypeFilter_FiltersToServicesOnly()
+    {
+        // Arrange
+        var profileId = Guid.NewGuid();
+        var profile = new Profile { Id = profileId, Name = "Test", Items = new List<ProfileItem>() };
+        _mockProfileService.Setup(s => s.GetProfilesAsync(default)).ReturnsAsync([profile]);
+        _mockProfileService.Setup(s => s.UpdateProfileAsync(It.IsAny<Profile>(), default)).ReturnsAsync(profile);
+        await ((AsyncRelayCommand)_viewModel.RefreshCommand).ExecuteAsync(null);
+        _viewModel.SelectedProfile = profile;
+
+        var app = new ProfileItem { Id = Guid.NewGuid(), DisplayName = "Chrome", ProcessName = "chrome", TargetType = TargetType.Application };
+        var svc = new ProfileItem { Id = Guid.NewGuid(), DisplayName = "SQL Server", ServiceName = "MSSQLSERVER", TargetType = TargetType.Service };
+        _viewModel.SelectedProfileItems.Add(new ProfileItemViewModel(app, _mockStateController.Object, _mockProfileItemViewModelLogger.Object));
+        _viewModel.SelectedProfileItems.Add(new ProfileItemViewModel(svc, _mockStateController.Object, _mockProfileItemViewModelLogger.Object));
+
+        // Act
+        _viewModel.SelectedCardTypeFilter = "Services";
+
+        // Assert
+        var visible = _viewModel.CardProfileItemsView.Cast<ProfileItemViewModel>().ToList();
+        visible.Should().HaveCount(1);
+        visible[0].TargetType.Should().Be(TargetType.Service);
     }
 
     [Fact]

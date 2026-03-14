@@ -794,6 +794,7 @@
     <!-- ListView Item Container Style - Centers cards and handles selection -->
     <Style x:Key="CardListViewItemStyle" TargetType="ListViewItem">
         <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="Padding" Value="0"/>
