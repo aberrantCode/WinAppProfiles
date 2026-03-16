@@ -15,7 +15,7 @@
         WindowState="Maximized">
     <Window.InputBindings>
         <KeyBinding Key="S" Modifiers="Control" Command="{Binding ApplyCommand}"/>
-        <KeyBinding Key="Escape" Command="{Binding ExitCardSelectionModeCommand}"/>
+        <KeyBinding Key="Escape" Command="{Binding CancelAllSelectionModesCommand}"/>
     </Window.InputBindings>
     <Window.Resources>
         <ResourceDictionary>
@@ -422,13 +422,75 @@
                 <DockPanel Margin="0,10,0,10">
                     <TextBlock Text="New Items Found (Needs Review)" Style="{StaticResource SectionHeaderText}"/>
                 </DockPanel>
+
+                <!-- Needs Review Action Bar (visible when in NeedsReview selection mode) -->
+                <Border Background="{StaticResource BackgroundTertiary}"
+                        CornerRadius="4"
+                        Padding="12,8"
+                        ClipToBounds="True">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="MaxHeight" Value="0"/>
+                            <Setter Property="Opacity" Value="0"/>
+                            <Setter Property="Margin" Value="0"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsNeedsReviewSelectionMode}" Value="True">
+                                    <Setter Property="MaxHeight" Value="200"/>
+                                    <Setter Property="Margin" Value="0,0,0,10"/>
+                                    <DataTrigger.EnterActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation From="0" Storyboard.TargetProperty="Opacity"
+                                                                 To="1" Duration="0:0:0.15">
+                                                    <DoubleAnimation.EasingFunction>
+                                                        <CubicEase EasingMode="EaseOut"/>
+                                                    </DoubleAnimation.EasingFunction>
+                                                </DoubleAnimation>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </DataTrigger.EnterActions>
+                                    <DataTrigger.ExitActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation From="1" Storyboard.TargetProperty="Opacity"
+                                                                 To="0" Duration="0:0:0.1"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </DataTrigger.ExitActions>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button Content="✚ Add to Profile"
+                                    Command="{Binding AddSelectedNeedsReviewCommand}"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Foreground="{StaticResource StatusRunning}"
+                                    FontSize="12" Padding="10,5" Margin="0,0,6,0"/>
+                            <Button Content="✕ Cancel"
+                                    Command="{Binding ExitNeedsReviewSelectionModeCommand}"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    FontSize="12" Padding="10,5"/>
+                        </StackPanel>
+                        <TextBlock VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}" FontSize="12">
+                            <Run Text="{Binding NeedsReviewSelectionCount, Mode=OneWay}"/>
+                            <Run Text=" item(s) selected"/>
+                        </TextBlock>
+                    </DockPanel>
+                </Border>
+
                 <Grid ClipToBounds="True">
                     <ListView x:Name="NewItemsList"
                               Style="{StaticResource CardListViewStyle}"
                               ItemContainerStyle="{StaticResource CardListViewItemStyle}"
                               ItemTemplate="{StaticResource NeedsReviewCardTemplate}"
                               ItemsSource="{Binding CardNeedsReviewView}"
+                              SelectionMode="Multiple"
                               PreviewMouseWheel="NewItemsList_PreviewMouseWheel"
+                              PreviewMouseLeftButtonDown="NewItemsList_PreviewMouseLeftButtonDown"
+                              PreviewMouseLeftButtonUp="NewItemsList_PreviewMouseLeftButtonUp"
+                              PreviewMouseMove="NewItemsList_PreviewMouseMove"
                               Loaded="NewItemsList_Loaded">
                         <ListView.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -500,8 +562,8 @@
 
             <!-- Drawer Panel - slides in from right -->
             <Border HorizontalAlignment="Right" Width="380"
-                    Background="{StaticResource BackgroundTertiary}"
-                    BorderBrush="{StaticResource BackgroundQuaternary}"
+                    Background="{StaticResource BackgroundSecondary}"
+                    BorderBrush="{StaticResource CardBorderBrush}"
                     BorderThickness="1,0,0,0">
                 <Border.RenderTransform>
                     <TranslateTransform X="380"/>
