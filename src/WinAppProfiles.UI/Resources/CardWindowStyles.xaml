@@ -159,6 +159,7 @@
                             BorderThickness="1.5"
                             Background="Transparent"
                             BorderBrush="#2A2A35"
+                            ClipToBounds="False"
                             VerticalAlignment="Center">
                         <Path x:Name="Tick"
                               Data="M 2 8 L 6 12 L 14 4"
@@ -172,13 +173,13 @@
                               VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Box" Property="BorderBrush" Value="#9993B4"/>
+                        </Trigger>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="Box" Property="Background" Value="#7C6FCD"/>
                             <Setter TargetName="Box" Property="BorderBrush" Value="#7C6FCD"/>
                             <Setter TargetName="Tick" Property="Visibility" Value="Visible"/>
-                        </Trigger>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Box" Property="BorderBrush" Value="#9993B4"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="Box" Property="Opacity" Value="0.4"/>
