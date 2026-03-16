@@ -46,6 +46,7 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly ObservableCollection<ProfileItemViewModel> _selectedProfileItemsForBulkApply = [];
     private readonly AsyncRelayCommand _openSettingsCommand;
     private StateIndicatorStyle _stateIndicatorStyle = StateIndicatorStyle.PillWithArrow;
+    private readonly Dictionary<string, string> _knownStateCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly AsyncRelayCommand _deleteProfileCommand;
     private readonly AsyncRelayCommand _saveProfileRenameCommand;
     private bool _isRenamingProfile;
@@ -310,16 +311,14 @@ public sealed partial class MainViewModel : ObservableObject
         var profiles = await _profileService.GetProfilesAsync();
 
         Profiles.Clear();
-        // Add a dummy "select profile" option
-        Profiles.Add(new Profile { Id = Guid.Empty, Name = "--- Select Profile ---" });
-
         foreach (var profile in profiles)
-        {
             Profiles.Add(profile);
-        }
 
-        // Set SelectedProfile to the dummy profile if no valid profile is selected
-        SelectedProfile = profiles.FirstOrDefault(x => x.IsDefault) ?? profiles.FirstOrDefault() ?? Profiles.FirstOrDefault();
+        // Preserve current selection if it still exists, otherwise fall back to default/first
+        var currentId = SelectedProfile?.Id;
+        SelectedProfile = profiles.FirstOrDefault(x => x.Id == currentId)
+            ?? profiles.FirstOrDefault(x => x.IsDefault)
+            ?? profiles.FirstOrDefault();
         StatusMessage = $"Loaded {profiles.Count} profile(s).";
     }
 
@@ -455,6 +454,14 @@ public sealed partial class MainViewModel : ObservableObject
 
     private void RefreshSelectedProfileItems()
     {
+        // Snapshot live states before discarding VMs so they can seed the next profile load
+        foreach (var vm in SelectedProfileItems)
+        {
+            var key = vm.GetModel().IdentityKey();
+            if (!string.IsNullOrEmpty(key) && vm.CurrentState != "Unknown")
+                _knownStateCache[key] = vm.CurrentState;
+        }
+
         SelectedProfileItems.Clear();
 
         if (SelectedProfile is null)
@@ -698,7 +705,9 @@ public sealed partial class MainViewModel : ObservableObject
 
     private Task AddSelectedNeedsReviewAsync()
     {
-        PromoteNeedsReviewItems(_selectedNeedsReviewItems.ToList());
+        var items = _selectedNeedsReviewItems.ToList();
+        ExitNeedsReviewSelectionMode();
+        PromoteNeedsReviewItems(items);
         return Task.CompletedTask;
     }
 
@@ -775,7 +784,9 @@ public sealed partial class MainViewModel : ObservableObject
 
     private ProfileItemViewModel CreateProfileItemViewModel(ProfileItem item)
     {
-        var viewModel = new ProfileItemViewModel(item, _stateController, _profileItemViewModelLogger);
+        var key = item.IdentityKey();
+        _knownStateCache.TryGetValue(key, out var cachedState);
+        var viewModel = new ProfileItemViewModel(item, _stateController, _profileItemViewModelLogger, cachedState);
 
         // Load icon asynchronously with caching
         Task.Run(() =>

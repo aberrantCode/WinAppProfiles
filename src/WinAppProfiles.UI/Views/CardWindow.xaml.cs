@@ -21,11 +21,17 @@ public partial class CardWindow : Window
     private NotifyIcon? _notifyIcon;
     private bool _isViewSwitch;
 
-    // Long-press selection state
+    // Long-press selection state — Profile Items panel
     private DispatcherTimer? _longPressTimer;
     private ProfileItemViewModel? _longPressTarget;
     private System.Windows.Point _longPressStartPoint;
     private bool _longPressFired;
+
+    // Long-press selection state — Needs Review panel
+    private DispatcherTimer? _nrLongPressTimer;
+    private ProfileItemViewModel? _nrLongPressTarget;
+    private System.Windows.Point _nrLongPressStartPoint;
+    private bool _nrLongPressFired;
 
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
@@ -229,6 +235,63 @@ public partial class CardWindow : Window
             source = VisualTreeHelper.GetParent(source);
         }
         return null;
+    }
+
+    private void NewItemsList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (IsClickOnButton(e.OriginalSource as DependencyObject)) return;
+
+        _nrLongPressTarget = GetCardItemAt(e.OriginalSource as DependencyObject);
+        if (_nrLongPressTarget == null) return;
+
+        _nrLongPressStartPoint = e.GetPosition(NewItemsList);
+        _nrLongPressFired = false;
+
+        _nrLongPressTimer?.Stop();
+        _nrLongPressTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
+        _nrLongPressTimer.Tick += (_, _) =>
+        {
+            _nrLongPressTimer?.Stop();
+            _nrLongPressFired = true;
+            if (DataContext is MainViewModel vm)
+                vm.ToggleNeedsReviewSelectionMode(_nrLongPressTarget);
+        };
+        _nrLongPressTimer.Start();
+
+        e.Handled = true;
+    }
+
+    private void NewItemsList_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (_nrLongPressFired)
+        {
+            _nrLongPressFired = false;
+            e.Handled = true;
+            return;
+        }
+
+        _nrLongPressTimer?.Stop();
+
+        if (DataContext is MainViewModel vm && vm.IsNeedsReviewSelectionMode
+            && _nrLongPressTarget != null
+            && !IsClickOnButton(e.OriginalSource as DependencyObject))
+        {
+            vm.ToggleNeedsReviewItemSelection(_nrLongPressTarget);
+            e.Handled = true;
+        }
+
+        _nrLongPressTarget = null;
+    }
+
+    private void NewItemsList_PreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (_nrLongPressTimer?.IsEnabled == true)
+        {
+            var pos = e.GetPosition(NewItemsList);
+            var delta = pos - _nrLongPressStartPoint;
+            if (Math.Abs(delta.X) > 8 || Math.Abs(delta.Y) > 8)
+                _nrLongPressTimer.Stop();
+        }
     }
 
     private void ProfileItemsList_Loaded(object sender, RoutedEventArgs e)

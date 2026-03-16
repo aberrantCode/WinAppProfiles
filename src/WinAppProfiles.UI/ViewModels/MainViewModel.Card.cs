@@ -16,6 +16,7 @@ public sealed partial class MainViewModel
     private ICollectionView _cardProfileItemsView = null!;
     private ICollectionView _cardNeedsReviewView = null!;
     private bool _isCardSelectionMode;
+    private bool _isNeedsReviewSelectionMode;
 
     public IReadOnlyList<string> CardTypeFilters { get; } = ["All", "Applications", "Services"];
     public ICollectionView CardProfileItemsView => _cardProfileItemsView;
@@ -26,8 +27,12 @@ public sealed partial class MainViewModel
     public ICommand RemoveSelectedCardItemsCommand => _removeSelectedCardItemsCommand;
     public ICommand ClearCardSelectionCommand { get; private set; } = null!;
     public ICommand ExitCardSelectionModeCommand { get; private set; } = null!;
+    public ICommand ExitNeedsReviewSelectionModeCommand { get; private set; } = null!;
+    public ICommand CancelAllSelectionModesCommand { get; private set; } = null!;
 
     public bool IsCardSelectionMode => _isCardSelectionMode;
+    public bool IsNeedsReviewSelectionMode => _isNeedsReviewSelectionMode;
+    public int NeedsReviewSelectionCount => _selectedNeedsReviewItems.Count;
 
     public string CardSearchText
     {
@@ -68,6 +73,8 @@ public sealed partial class MainViewModel
         _removeSelectedCardItemsCommand = new RelayCommand(RemoveSelectedCardItems, () => HasCardItemsSelection);
         ClearCardSelectionCommand = new RelayCommand(ExitCardSelectionMode);
         ExitCardSelectionModeCommand = new RelayCommand(ExitCardSelectionMode);
+        ExitNeedsReviewSelectionModeCommand = new RelayCommand(ExitNeedsReviewSelectionMode);
+        CancelAllSelectionModesCommand = new RelayCommand(() => { ExitCardSelectionMode(); ExitNeedsReviewSelectionMode(); });
 
         _cardProfileItemsView = new CollectionViewSource { Source = SelectedProfileItems }.View;
         _cardProfileItemsView.Filter = CardProfileItemsFilter;
@@ -162,5 +169,52 @@ public sealed partial class MainViewModel
         OnPropertyChanged(nameof(HasCardItemsSelection));
         OnPropertyChanged(nameof(CardSelectionCount));
         NotifyCardCommandsChanged();
+    }
+
+    public void ToggleNeedsReviewSelectionMode(ProfileItemViewModel? triggerItem)
+    {
+        if (_isNeedsReviewSelectionMode)
+        {
+            ExitNeedsReviewSelectionMode();
+        }
+        else
+        {
+            _isNeedsReviewSelectionMode = true;
+            OnPropertyChanged(nameof(IsNeedsReviewSelectionMode));
+            if (triggerItem != null)
+                ToggleNeedsReviewItemSelection(triggerItem);
+        }
+    }
+
+    public void ToggleNeedsReviewItemSelection(ProfileItemViewModel item)
+    {
+        if (item.IsSelected)
+        {
+            item.IsSelected = false;
+            _selectedNeedsReviewItems.Remove(item);
+        }
+        else
+        {
+            item.IsSelected = true;
+            _selectedNeedsReviewItems.Add(item);
+        }
+        OnPropertyChanged(nameof(HasNeedsReviewSelection));
+        OnPropertyChanged(nameof(NeedsReviewSelectionCount));
+        _addSelectedNeedsReviewCommand.NotifyCanExecuteChanged();
+    }
+
+    internal void ExitNeedsReviewSelectionMode()
+    {
+        foreach (var item in _selectedNeedsReviewItems.ToList())
+            item.IsSelected = false;
+        _selectedNeedsReviewItems.Clear();
+        OnPropertyChanged(nameof(HasNeedsReviewSelection));
+        OnPropertyChanged(nameof(NeedsReviewSelectionCount));
+        _addSelectedNeedsReviewCommand.NotifyCanExecuteChanged();
+        if (_isNeedsReviewSelectionMode)
+        {
+            _isNeedsReviewSelectionMode = false;
+            OnPropertyChanged(nameof(IsNeedsReviewSelectionMode));
+        }
     }
 }

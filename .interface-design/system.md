@@ -166,6 +166,51 @@ The **violet-gray secondary text** (`#9993B4`) ties everything together — it's
 
 ---
 
+## Motion & Animation
+
+All transitions use WPF `Storyboard` animations. Rule: **intentional motion only** — every animation communicates state change, not decoration.
+
+### Established Patterns
+
+| Pattern | Duration | Easing | Notes |
+|---------|----------|--------|-------|
+| Drawer slide-in (from right) | 250ms | CubicEase EaseOut | Item Settings panel |
+| Drawer slide-out | 200ms | Linear | |
+| Backdrop fade-in | 200ms | Linear | Semi-transparent `#AA000000` |
+| Backdrop fade-out | 150ms | Linear | |
+
+### Guidance
+- Enter animations: CubicEase EaseOut (feels decisive, snappy)
+- Exit animations: Linear or shorter duration (gets out of the way)
+- Duration range: 150–250ms. Never exceed 300ms for UI chrome.
+- Never animate for decoration. Every animated element must reinforce a state change.
+
+---
+
+## Drawer / Panel Pattern
+
+The Item Settings drawer is a `Border` with `HorizontalAlignment="Right"` overlaid on the full window at `ZIndex=100`, with a semi-transparent backdrop that closes on click.
+
+**Background rule:** Drawers and panels use `BackgroundSecondary` (`#1A1A20`), NOT `BackgroundTertiary`. Input fields *inside* panels use `BackgroundQuaternary` (`#16161A`) or `BackgroundTertiary` (`#222228`).
+
+**Left border:** Use `CardBorderBrush` (`#2A2A35`) at `BorderThickness="1,0,0,0"` for the drawer's left edge — not a darker background color.
+
+---
+
+## Known Design Debt
+
+### Item Settings Panel (high priority)
+The current implementation has several violations of the design system:
+
+1. **Native checkboxes** — `Battery Mode Only` and `Force Minimized on Start` use a raw `<CheckBox>` with no custom template. They render as Windows native white squares. A custom `SettingsCheckBoxStyle` is needed (styled `CheckBox` with a 16×16 border, tick mark, accent fill when checked).
+2. **SELECT ICON ComboBox** — not using `ProfileComboBoxStyle`, falls back to native Windows ComboBox rendering with a light background.
+3. **Panel background wrong** — drawer uses `BackgroundTertiary` instead of `BackgroundSecondary`. Creates a flat, undifferentiated look.
+4. **Left border invisible** — `BackgroundQuaternary` on a `BackgroundTertiary` surface has near-zero contrast. Should be `CardBorderBrush`.
+5. **Dead space** — `ScrollViewer` with `Height="*"` and sparse content creates a large empty zone above footer buttons. Consider `VerticalAlignment="Top"` on the scrollable row or anchor the footer differently.
+6. **Section label inconsistency** — field labels (`DISPLAY NAME`, `PATH`, `SELECT ICON`) use `TextSecondary`, while section group headers (`STARTUP BEHAVIOR`, `ICON`) use `AccentPrimary`. Rule: **group headers** use `AccentPrimary`, **field labels** use `TextSecondary`. Currently `SELECT ICON` is a field label using `TextSecondary` — correct. Keep this distinction enforced.
+
+---
+
 ## What We're Not
 
 - Not a Fluent Design clone (`#0078D4` everywhere)
