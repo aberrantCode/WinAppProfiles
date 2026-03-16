@@ -31,11 +31,13 @@ public sealed class ProfileItemViewModel : ObservableObject
     public static IReadOnlyList<DesiredState> DesiredStateOptions { get; } =
         [DesiredState.Running, DesiredState.Stopped, DesiredState.Ignore];
 
-    public ProfileItemViewModel(ProfileItem model, IStateController stateController, ILogger<ProfileItemViewModel> logger)
+    public ProfileItemViewModel(ProfileItem model, IStateController stateController, ILogger<ProfileItemViewModel> logger, string? initialCurrentState = null)
     {
         _model = model;
         _stateController = stateController;
         _logger = logger;
+        if (initialCurrentState is not null)
+            _currentState = initialCurrentState;
     }
 
     // Expose properties from the underlying ProfileItem model
