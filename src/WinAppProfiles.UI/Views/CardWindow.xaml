@@ -829,12 +829,10 @@
                                             </TextBlock>
                                             <ComboBox ItemsSource="{Binding AvailableIconOptions}"
                                                       SelectedItem="{Binding EditSelectedIconOption, Mode=TwoWay}"
-                                                      Background="{StaticResource BackgroundQuaternary}"
-                                                      Foreground="{StaticResource TextPrimary}"
-                                                      BorderBrush="{StaticResource BackgroundQuaternary}"
+                                                      ItemContainerStyle="{StaticResource ProfileComboBoxItemStyle}"
                                                       MaxDropDownHeight="260">
                                                 <ComboBox.Style>
-                                                    <Style TargetType="ComboBox">
+                                                    <Style TargetType="ComboBox" BasedOn="{StaticResource ProfileComboBoxStyle}">
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding AvailableIconOptions.Count}" Value="0">
                                                                 <Setter Property="Visibility" Value="Collapsed"/>
