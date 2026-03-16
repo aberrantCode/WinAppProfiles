@@ -128,6 +128,18 @@ public sealed class SettingsViewModel : ObservableObject
         }
     }
 
+    public StateIndicatorStyle StateIndicatorStyle
+    {
+        get => _settings.StateIndicatorStyle;
+        set
+        {
+            if (_settings.StateIndicatorStyle == value) return;
+            _settings.StateIndicatorStyle = value;
+            OnPropertyChanged();
+            ((AsyncRelayCommand)SaveCommand).NotifyCanExecuteChanged();
+        }
+    }
+
     public IReadOnlyList<InterfaceType> AvailableInterfaceTypes { get; } =
         Enum.GetValues(typeof(InterfaceType)).Cast<InterfaceType>().ToList();
 

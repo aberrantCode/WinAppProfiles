@@ -44,7 +44,8 @@ public sealed partial class MainViewModel : ObservableObject
     private string _selectedNeedsReviewTypeFilter = "All";
     private readonly ObservableCollection<ProfileItemViewModel> _selectedNeedsReviewItems = [];
     private readonly ObservableCollection<ProfileItemViewModel> _selectedProfileItemsForBulkApply = [];
-    private readonly AsyncRelayCommand _openSettingsCommand; // Declare the command
+    private readonly AsyncRelayCommand _openSettingsCommand;
+    private StateIndicatorStyle _stateIndicatorStyle = StateIndicatorStyle.PillWithArrow;
     private readonly AsyncRelayCommand _deleteProfileCommand;
     private readonly AsyncRelayCommand _saveProfileRenameCommand;
     private bool _isRenamingProfile;
@@ -78,7 +79,12 @@ public sealed partial class MainViewModel : ObservableObject
     public MainViewModel(IProfileService profileService, SettingsViewModel settingsViewModel, IStateController stateController, IDiscoveryService discoveryService, ILoggerFactory loggerFactory, IconCacheService iconCacheService, IStatusMonitoringService statusMonitoringService)
     {
         _profileService = profileService;
-        _settingsViewModel = settingsViewModel; // Store reference to settingsViewModel
+        _settingsViewModel = settingsViewModel;
+        _settingsViewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(SettingsViewModel.StateIndicatorStyle))
+                StateIndicatorStyle = _settingsViewModel.StateIndicatorStyle;
+        };
         _stateController = stateController;
         _discoveryService = discoveryService;
         _loggerFactory = loggerFactory;
@@ -206,6 +212,12 @@ public sealed partial class MainViewModel : ObservableObject
     {
         get => _isAdvancedMode;
         set => SetProperty(ref _isAdvancedMode, value);
+    }
+
+    public StateIndicatorStyle StateIndicatorStyle
+    {
+        get => _stateIndicatorStyle;
+        private set => SetProperty(ref _stateIndicatorStyle, value);
     }
 
     public bool IsDarkMode
@@ -403,7 +415,17 @@ public sealed partial class MainViewModel : ObservableObject
 
         SelectedProfile.Name = trimmed;
         await _profileService.UpdateProfileAsync(SelectedProfile);
-        OnPropertyChanged(nameof(SelectedProfile));
+
+        // Profile is a plain POCO, so we must remove/re-insert to trigger
+        // the ComboBox to re-render the updated Name.
+        var index = Profiles.IndexOf(SelectedProfile);
+        if (index >= 0)
+        {
+            Profiles.RemoveAt(index);
+            Profiles.Insert(index, SelectedProfile);
+            SelectedProfile = Profiles[index];
+        }
+
         IsRenamingProfile = false;
         StatusMessage = $"Profile renamed to '{trimmed}'.";
     }
@@ -849,6 +871,7 @@ public sealed partial class MainViewModel : ObservableObject
     private async Task OpenSettingsAsync()
     {
         var originalInterval = _settingsViewModel.StatusPollingIntervalSeconds;
+        StateIndicatorStyle = _settingsViewModel.StateIndicatorStyle;
 
         var settingsWindow = new Views.SettingsWindow(_settingsViewModel);
         settingsWindow.ShowDialog();

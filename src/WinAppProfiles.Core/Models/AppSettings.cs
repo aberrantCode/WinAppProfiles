@@ -9,6 +9,7 @@ public sealed class AppSettings
     public bool MinimizeToTrayOnClose { get; set; } = false;
     public InterfaceType DefaultInterfaceType { get; set; } = InterfaceType.Tabbed;
     public int StatusPollingIntervalSeconds { get; set; } = 5;
+    public StateIndicatorStyle StateIndicatorStyle { get; set; } = StateIndicatorStyle.PillWithArrow;
 
     public AppSettings Clone()
     {
@@ -20,7 +21,8 @@ public sealed class AppSettings
             MinimizeOnLaunch = this.MinimizeOnLaunch,
             MinimizeToTrayOnClose = this.MinimizeToTrayOnClose,
             DefaultInterfaceType = this.DefaultInterfaceType,
-            StatusPollingIntervalSeconds = this.StatusPollingIntervalSeconds
+            StatusPollingIntervalSeconds = this.StatusPollingIntervalSeconds,
+            StateIndicatorStyle = this.StateIndicatorStyle
         };
     }
 
@@ -33,11 +35,12 @@ public sealed class AppSettings
                MinimizeOnLaunch == settings.MinimizeOnLaunch &&
                MinimizeToTrayOnClose == settings.MinimizeToTrayOnClose &&
                DefaultInterfaceType == settings.DefaultInterfaceType &&
-               StatusPollingIntervalSeconds == settings.StatusPollingIntervalSeconds;
+               StatusPollingIntervalSeconds == settings.StatusPollingIntervalSeconds &&
+               StateIndicatorStyle == settings.StateIndicatorStyle;
     }
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(DefaultProfileId, AutoApplyDefaultProfile, EnableDarkMode, MinimizeOnLaunch, MinimizeToTrayOnClose, DefaultInterfaceType, StatusPollingIntervalSeconds);
+        return HashCode.Combine(DefaultProfileId, AutoApplyDefaultProfile, EnableDarkMode, MinimizeOnLaunch, MinimizeToTrayOnClose, DefaultInterfaceType, StatusPollingIntervalSeconds, StateIndicatorStyle);
     }
 }
