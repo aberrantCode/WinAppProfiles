@@ -23,10 +23,15 @@ public sealed class SqliteAppSettingsRepository : IAppSettingsRepository
         var version = connection.QuerySingle<int>("PRAGMA user_version;");
         if (version < 1)
         {
-            // Add DefaultInterfaceType to the app_settings table
-            connection.Execute("INSERT OR IGNORE INTO app_settings (key, value) VALUES (@Key, @Value);", 
+            connection.Execute("INSERT OR IGNORE INTO app_settings (key, value) VALUES (@Key, @Value);",
                 new { Key = nameof(AppSettings.DefaultInterfaceType), Value = InterfaceType.Default.ToString() });
             connection.Execute("PRAGMA user_version = 1;");
+        }
+        if (version < 2)
+        {
+            connection.Execute("INSERT OR IGNORE INTO app_settings (key, value) VALUES (@Key, @Value);",
+                new { Key = nameof(AppSettings.StateIndicatorStyle), Value = StateIndicatorStyle.PillWithArrow.ToString() });
+            connection.Execute("PRAGMA user_version = 2;");
         }
     }
 
@@ -66,6 +71,10 @@ public sealed class SqliteAppSettingsRepository : IAppSettingsRepository
                     if (Enum.TryParse<InterfaceType>(row.Value, out var interfaceType))
                         settings.DefaultInterfaceType = interfaceType;
                     break;
+                case nameof(AppSettings.StateIndicatorStyle):
+                    if (Enum.TryParse<StateIndicatorStyle>(row.Value, out var indicatorStyle))
+                        settings.StateIndicatorStyle = indicatorStyle;
+                    break;
             }
         }
 
@@ -87,7 +96,8 @@ public sealed class SqliteAppSettingsRepository : IAppSettingsRepository
                 new { Key = nameof(AppSettings.EnableDarkMode), Value = settings.EnableDarkMode.ToString() },
                 new { Key = nameof(AppSettings.MinimizeOnLaunch), Value = settings.MinimizeOnLaunch.ToString() },
                 new { Key = nameof(AppSettings.MinimizeToTrayOnClose), Value = settings.MinimizeToTrayOnClose.ToString() },
-                new { Key = nameof(AppSettings.DefaultInterfaceType), Value = settings.DefaultInterfaceType.ToString() }
+                new { Key = nameof(AppSettings.DefaultInterfaceType), Value = settings.DefaultInterfaceType.ToString() },
+                new { Key = nameof(AppSettings.StateIndicatorStyle), Value = settings.StateIndicatorStyle.ToString() }
             });
     }
 

@@ -44,7 +44,9 @@ public sealed partial class MainViewModel : ObservableObject
     private string _selectedNeedsReviewTypeFilter = "All";
     private readonly ObservableCollection<ProfileItemViewModel> _selectedNeedsReviewItems = [];
     private readonly ObservableCollection<ProfileItemViewModel> _selectedProfileItemsForBulkApply = [];
-    private readonly AsyncRelayCommand _openSettingsCommand; // Declare the command
+    private readonly AsyncRelayCommand _openSettingsCommand;
+    private StateIndicatorStyle _stateIndicatorStyle = StateIndicatorStyle.PillWithArrow;
+    private readonly Dictionary<string, string> _knownStateCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly AsyncRelayCommand _deleteProfileCommand;
     private readonly AsyncRelayCommand _saveProfileRenameCommand;
     private bool _isRenamingProfile;
@@ -78,7 +80,12 @@ public sealed partial class MainViewModel : ObservableObject
     public MainViewModel(IProfileService profileService, SettingsViewModel settingsViewModel, IStateController stateController, IDiscoveryService discoveryService, ILoggerFactory loggerFactory, IconCacheService iconCacheService, IStatusMonitoringService statusMonitoringService)
     {
         _profileService = profileService;
-        _settingsViewModel = settingsViewModel; // Store reference to settingsViewModel
+        _settingsViewModel = settingsViewModel;
+        _settingsViewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(SettingsViewModel.StateIndicatorStyle))
+                StateIndicatorStyle = _settingsViewModel.StateIndicatorStyle;
+        };
         _stateController = stateController;
         _discoveryService = discoveryService;
         _loggerFactory = loggerFactory;
@@ -208,6 +215,12 @@ public sealed partial class MainViewModel : ObservableObject
         set => SetProperty(ref _isAdvancedMode, value);
     }
 
+    public StateIndicatorStyle StateIndicatorStyle
+    {
+        get => _stateIndicatorStyle;
+        private set => SetProperty(ref _stateIndicatorStyle, value);
+    }
+
     public bool IsDarkMode
     {
         get => _isDarkMode;
@@ -298,16 +311,14 @@ public sealed partial class MainViewModel : ObservableObject
         var profiles = await _profileService.GetProfilesAsync();
 
         Profiles.Clear();
-        // Add a dummy "select profile" option
-        Profiles.Add(new Profile { Id = Guid.Empty, Name = "--- Select Profile ---" });
-
         foreach (var profile in profiles)
-        {
             Profiles.Add(profile);
-        }
 
-        // Set SelectedProfile to the dummy profile if no valid profile is selected
-        SelectedProfile = profiles.FirstOrDefault(x => x.IsDefault) ?? profiles.FirstOrDefault() ?? Profiles.FirstOrDefault();
+        // Preserve current selection if it still exists, otherwise fall back to default/first
+        var currentId = SelectedProfile?.Id;
+        SelectedProfile = profiles.FirstOrDefault(x => x.Id == currentId)
+            ?? profiles.FirstOrDefault(x => x.IsDefault)
+            ?? profiles.FirstOrDefault();
         StatusMessage = $"Loaded {profiles.Count} profile(s).";
     }
 
@@ -403,7 +414,17 @@ public sealed partial class MainViewModel : ObservableObject
 
         SelectedProfile.Name = trimmed;
         await _profileService.UpdateProfileAsync(SelectedProfile);
-        OnPropertyChanged(nameof(SelectedProfile));
+
+        // Profile is a plain POCO, so we must remove/re-insert to trigger
+        // the ComboBox to re-render the updated Name.
+        var index = Profiles.IndexOf(SelectedProfile);
+        if (index >= 0)
+        {
+            Profiles.RemoveAt(index);
+            Profiles.Insert(index, SelectedProfile);
+            SelectedProfile = Profiles[index];
+        }
+
         IsRenamingProfile = false;
         StatusMessage = $"Profile renamed to '{trimmed}'.";
     }
@@ -433,6 +454,14 @@ public sealed partial class MainViewModel : ObservableObject
 
     private void RefreshSelectedProfileItems()
     {
+        // Snapshot live states before discarding VMs so they can seed the next profile load
+        foreach (var vm in SelectedProfileItems)
+        {
+            var key = vm.GetModel().IdentityKey();
+            if (!string.IsNullOrEmpty(key) && vm.CurrentState != "Unknown")
+                _knownStateCache[key] = vm.CurrentState;
+        }
+
         SelectedProfileItems.Clear();
 
         if (SelectedProfile is null)
@@ -676,7 +705,9 @@ public sealed partial class MainViewModel : ObservableObject
 
     private Task AddSelectedNeedsReviewAsync()
     {
-        PromoteNeedsReviewItems(_selectedNeedsReviewItems.ToList());
+        var items = _selectedNeedsReviewItems.ToList();
+        ExitNeedsReviewSelectionMode();
+        PromoteNeedsReviewItems(items);
         return Task.CompletedTask;
     }
 
@@ -753,7 +784,9 @@ public sealed partial class MainViewModel : ObservableObject
 
     private ProfileItemViewModel CreateProfileItemViewModel(ProfileItem item)
     {
-        var viewModel = new ProfileItemViewModel(item, _stateController, _profileItemViewModelLogger);
+        var key = item.IdentityKey();
+        _knownStateCache.TryGetValue(key, out var cachedState);
+        var viewModel = new ProfileItemViewModel(item, _stateController, _profileItemViewModelLogger, cachedState);
 
         // Load icon asynchronously with caching
         Task.Run(() =>
@@ -849,6 +882,7 @@ public sealed partial class MainViewModel : ObservableObject
     private async Task OpenSettingsAsync()
     {
         var originalInterval = _settingsViewModel.StatusPollingIntervalSeconds;
+        StateIndicatorStyle = _settingsViewModel.StateIndicatorStyle;
 
         var settingsWindow = new Views.SettingsWindow(_settingsViewModel);
         settingsWindow.ShowDialog();

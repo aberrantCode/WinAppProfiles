@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Threading;
 using WinAppProfiles.Core.Abstractions;
 using WinAppProfiles.Core.Models;
 using WinAppProfiles.UI.ViewModels;
@@ -19,6 +20,18 @@ public partial class CardWindow : Window
     private readonly IAppSettingsRepository _appSettingsRepository;
     private NotifyIcon? _notifyIcon;
     private bool _isViewSwitch;
+
+    // Long-press selection state — Profile Items panel
+    private DispatcherTimer? _longPressTimer;
+    private ProfileItemViewModel? _longPressTarget;
+    private System.Windows.Point _longPressStartPoint;
+    private bool _longPressFired;
+
+    // Long-press selection state — Needs Review panel
+    private DispatcherTimer? _nrLongPressTimer;
+    private ProfileItemViewModel? _nrLongPressTarget;
+    private System.Windows.Point _nrLongPressStartPoint;
+    private bool _nrLongPressFired;
 
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
@@ -145,29 +158,203 @@ public partial class CardWindow : Window
         }
     }
 
-    private void ProfileItemsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void ProfileItemsList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (DataContext is MainViewModel vm && sender is System.Windows.Controls.ListView lv)
-            vm.UpdateProfileItemsSelection(lv.SelectedItems);
+        if (IsClickOnButton(e.OriginalSource as DependencyObject)) return;
+
+        _longPressTarget = GetCardItemAt(e.OriginalSource as DependencyObject);
+        if (_longPressTarget == null) return;
+
+        _longPressStartPoint = e.GetPosition(ProfileItemsList);
+        _longPressFired = false;
+
+        _longPressTimer?.Stop();
+        _longPressTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
+        _longPressTimer.Tick += (_, _) =>
+        {
+            _longPressTimer?.Stop();
+            _longPressFired = true;
+            if (DataContext is MainViewModel vm)
+                vm.ToggleCardSelectionMode(_longPressTarget);
+        };
+        _longPressTimer.Start();
+
+        // Prevent ListView from handling the click (we own all selection logic)
+        e.Handled = true;
     }
 
-    private void ListView_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    private void ProfileItemsList_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (_longPressFired)
+        {
+            _longPressFired = false;
+            e.Handled = true;
+            return;
+        }
+
+        _longPressTimer?.Stop();
+
+        if (DataContext is MainViewModel vm && vm.IsCardSelectionMode
+            && _longPressTarget != null
+            && !IsClickOnButton(e.OriginalSource as DependencyObject))
+        {
+            vm.ToggleCardItemSelection(_longPressTarget);
+            e.Handled = true;
+        }
+
+        _longPressTarget = null;
+    }
+
+    private void ProfileItemsList_PreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (_longPressTimer?.IsEnabled == true)
+        {
+            var pos = e.GetPosition(ProfileItemsList);
+            var delta = pos - _longPressStartPoint;
+            if (Math.Abs(delta.X) > 8 || Math.Abs(delta.Y) > 8)
+                _longPressTimer.Stop();
+        }
+    }
+
+    private static bool IsClickOnButton(DependencyObject? source)
+    {
+        while (source != null)
+        {
+            if (source is System.Windows.Controls.Button) return true;
+            source = VisualTreeHelper.GetParent(source);
+        }
+        return false;
+    }
+
+    private static ProfileItemViewModel? GetCardItemAt(DependencyObject? source)
+    {
+        while (source != null)
+        {
+            if (source is System.Windows.Controls.ListViewItem lvi && lvi.DataContext is ProfileItemViewModel item)
+                return item;
+            source = VisualTreeHelper.GetParent(source);
+        }
+        return null;
+    }
+
+    private void NewItemsList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (IsClickOnButton(e.OriginalSource as DependencyObject)) return;
+
+        _nrLongPressTarget = GetCardItemAt(e.OriginalSource as DependencyObject);
+        if (_nrLongPressTarget == null) return;
+
+        _nrLongPressStartPoint = e.GetPosition(NewItemsList);
+        _nrLongPressFired = false;
+
+        _nrLongPressTimer?.Stop();
+        _nrLongPressTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
+        _nrLongPressTimer.Tick += (_, _) =>
+        {
+            _nrLongPressTimer?.Stop();
+            _nrLongPressFired = true;
+            if (DataContext is MainViewModel vm)
+                vm.ToggleNeedsReviewSelectionMode(_nrLongPressTarget);
+        };
+        _nrLongPressTimer.Start();
+
+        e.Handled = true;
+    }
+
+    private void NewItemsList_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (_nrLongPressFired)
+        {
+            _nrLongPressFired = false;
+            e.Handled = true;
+            return;
+        }
+
+        _nrLongPressTimer?.Stop();
+
+        if (DataContext is MainViewModel vm && vm.IsNeedsReviewSelectionMode
+            && _nrLongPressTarget != null
+            && !IsClickOnButton(e.OriginalSource as DependencyObject))
+        {
+            vm.ToggleNeedsReviewItemSelection(_nrLongPressTarget);
+            e.Handled = true;
+        }
+
+        _nrLongPressTarget = null;
+    }
+
+    private void NewItemsList_PreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (_nrLongPressTimer?.IsEnabled == true)
+        {
+            var pos = e.GetPosition(NewItemsList);
+            var delta = pos - _nrLongPressStartPoint;
+            if (Math.Abs(delta.X) > 8 || Math.Abs(delta.Y) > 8)
+                _nrLongPressTimer.Stop();
+        }
+    }
+
+    private void ProfileItemsList_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.ListView lv)
+            AttachScrollFade(lv, ProfileItemsLeftFade, ProfileItemsRightFade);
+    }
+
+    private void NewItemsList_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.ListView lv)
+            AttachScrollFade(lv, NewItemsLeftFade, NewItemsRightFade);
+    }
+
+    private void AttachScrollFade(System.Windows.Controls.ListView lv, UIElement leftFade, UIElement rightFade)
+    {
+        var sv = FindVisualChild<ScrollViewer>(lv);
+        if (sv is null) return;
+
+        UpdateFades(sv, leftFade, rightFade);
+        sv.ScrollChanged += (_, _) => UpdateFades(sv, leftFade, rightFade);
+    }
+
+    private static void UpdateFades(ScrollViewer sv, UIElement leftFade, UIElement rightFade)
+    {
+        leftFade.Opacity = sv.HorizontalOffset > 0 ? 1 : 0;
+        rightFade.Opacity = sv.HorizontalOffset < sv.ScrollableWidth ? 1 : 0;
+    }
+
+    private void ProfileItemsList_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        var outerSv = FindVisualParent<ScrollViewer>((DependencyObject)sender);
+        if (outerSv != null)
+        {
+            outerSv.ScrollToVerticalOffset(outerSv.VerticalOffset - e.Delta * 0.5);
+            e.Handled = true;
+        }
+    }
+
+    private void NewItemsList_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
         if (sender is System.Windows.Controls.ListView listView)
         {
-            // Find the ScrollViewer inside the ListView
             var scrollViewer = FindVisualChild<ScrollViewer>(listView);
             if (scrollViewer != null)
             {
-                // Scroll horizontally based on mouse wheel delta
-                // Positive delta = scroll left, negative delta = scroll right
-                double scrollAmount = e.Delta * 0.5; // Adjust multiplier for scroll speed
+                double scrollAmount = e.Delta * 0.5;
                 scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset - scrollAmount);
-
-                // Mark the event as handled to prevent it from bubbling up
+                UpdateFades(scrollViewer, NewItemsLeftFade, NewItemsRightFade);
                 e.Handled = true;
             }
         }
+    }
+
+    private static T? FindVisualParent<T>(DependencyObject child) where T : DependencyObject
+    {
+        var parent = VisualTreeHelper.GetParent(child);
+        while (parent != null)
+        {
+            if (parent is T typed) return typed;
+            parent = VisualTreeHelper.GetParent(parent);
+        }
+        return null;
     }
 
     private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
