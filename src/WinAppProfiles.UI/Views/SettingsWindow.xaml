@@ -7,7 +7,7 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:models="clr-namespace:WinAppProfiles.Core.Models;assembly=WinAppProfiles.Core"
         mc:Ignorable="d"
-        Title="Settings" Height="450" Width="400"
+        Title="Settings" Height="490" Width="400"
         Background="{DynamicResource Theme.WindowBackgroundBrush}"
         Foreground="{DynamicResource Theme.ForegroundBrush}"
         ResizeMode="NoResize"
@@ -30,7 +30,8 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" /> <!-- New row for InterfaceType -->
+            <RowDefinition Height="Auto" /> <!-- InterfaceType -->
+            <RowDefinition Height="Auto" /> <!-- StateIndicatorStyle -->
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -74,9 +75,20 @@
                   SelectedItem="{Binding DefaultInterfaceType}"
                   Margin="0,5,0,0" />
 
+        <!-- State Indicator Style -->
+        <TextBlock Grid.Row="6" Grid.Column="0" Text="State Indicators:" VerticalAlignment="Center" Margin="0,5,10,0" />
+        <ComboBox Grid.Row="6" Grid.Column="1"
+                  SelectedValue="{Binding StateIndicatorStyle}"
+                  SelectedValuePath="Tag"
+                  Margin="0,5,0,0">
+            <ComboBoxItem Content="A — Pill with Arrow" Tag="{x:Static models:StateIndicatorStyle.PillWithArrow}"/>
+            <ComboBoxItem Content="B — Stacked Labels" Tag="{x:Static models:StateIndicatorStyle.StackedLabels}"/>
+            <ComboBoxItem Content="C — Sized Dots" Tag="{x:Static models:StateIndicatorStyle.SizedDots}"/>
+        </ComboBox>
+
         <!-- Status Monitoring Interval -->
-        <TextBlock Grid.Row="6" Grid.Column="0" Text="Status Update Interval:" VerticalAlignment="Center" Margin="0,10,10,0" />
-        <StackPanel Grid.Row="6" Grid.Column="1" Margin="0,10,0,0">
+        <TextBlock Grid.Row="7" Grid.Column="0" Text="Status Update Interval:" VerticalAlignment="Center" Margin="0,10,10,0" />
+        <StackPanel Grid.Row="7" Grid.Column="1" Margin="0,10,0,0">
             <Slider Minimum="2"
                     Maximum="30"
                     Value="{Binding StatusPollingIntervalSeconds, Mode=TwoWay}"
@@ -89,7 +101,7 @@
                        Opacity="0.7"/>
         </StackPanel>
 
-        <StackPanel Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+        <StackPanel Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
             <Button Content="Save" Command="{Binding SaveCommand}" Width="80" Margin="0,0,10,0" />
             <Button Content="Cancel" Command="{Binding CancelCommand}" Width="80" />
         </StackPanel>

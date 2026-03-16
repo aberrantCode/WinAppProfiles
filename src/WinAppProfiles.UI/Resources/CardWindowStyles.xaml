@@ -159,7 +159,6 @@
                 BorderThickness="1">
             <Border.Style>
                 <Style TargetType="Border">
-                    <Setter Property="Height" Value="200"/>
                     <Setter Property="Opacity" Value="1"/>
                     <Style.Triggers>
                         <!-- Dim the card and show tooltip if the item doesn't exist -->
@@ -199,59 +198,159 @@
                                Style="{StaticResource CardTitleText}"
                                Margin="0,0,0,10"/>
 
-                    <!-- Status Indicator -->
-                    <StackPanel Orientation="Horizontal"
-                                HorizontalAlignment="Center"
-                                Margin="0,0,0,15">
-                        <Ellipse Width="10"
-                                 Height="10"
-                                 Margin="0,0,8,0">
+                    <!-- State Indicators — style switched at runtime via StateIndicatorStyle setting -->
+
+                    <!-- Option A: PillWithArrow — prominent current state + subtle desired arrow -->
+                    <StackPanel Margin="0,0,0,15" HorizontalAlignment="Center">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DataContext.StateIndicatorStyle, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" Value="PillWithArrow">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <!-- Current state: dot + bold text -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,5"
+                                    ToolTip="{Binding CurrentState, StringFormat='Current: {0}'}">
+                            <Ellipse Width="9" Height="9" VerticalAlignment="Center" Margin="0,0,6,0">
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Setter Property="Fill" Value="{StaticResource StatusUnknown}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding CurrentState}" Value="Running"><Setter Property="Fill" Value="{StaticResource StatusRunning}"/></DataTrigger>
+                                            <DataTrigger Binding="{Binding CurrentState}" Value="Not Running"><Setter Property="Fill" Value="{StaticResource StatusStopped}"/></DataTrigger>
+                                            <DataTrigger Binding="{Binding CurrentState}" Value="Stopped"><Setter Property="Fill" Value="{StaticResource StatusStopped}"/></DataTrigger>
+                                            <DataTrigger Binding="{Binding CurrentState}" Value="Not Found"><Setter Property="Fill" Value="{StaticResource StatusNotFound}"/></DataTrigger>
+                                            <DataTrigger Binding="{Binding CurrentState}" Value="Error"><Setter Property="Fill" Value="{StaticResource StatusError}"/></DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+                            <TextBlock Text="{Binding CurrentState}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{StaticResource StatusUnknown}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding CurrentState}" Value="Running"><Setter Property="Foreground" Value="{StaticResource StatusRunning}"/></DataTrigger>
+                                            <DataTrigger Binding="{Binding CurrentState}" Value="Not Running"><Setter Property="Foreground" Value="{StaticResource StatusStopped}"/></DataTrigger>
+                                            <DataTrigger Binding="{Binding CurrentState}" Value="Stopped"><Setter Property="Foreground" Value="{StaticResource StatusStopped}"/></DataTrigger>
+                                            <DataTrigger Binding="{Binding CurrentState}" Value="Not Found"><Setter Property="Foreground" Value="{StaticResource StatusNotFound}"/></DataTrigger>
+                                            <DataTrigger Binding="{Binding CurrentState}" Value="Error"><Setter Property="Foreground" Value="{StaticResource StatusError}"/></DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+                        <!-- Desired state: arrow + muted text -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
+                                    ToolTip="{Binding DesiredState, StringFormat='Desired: {0}'}">
+                            <TextBlock Text="→" FontSize="10" Foreground="{StaticResource TextMuted}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding DesiredState}" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Option B: StackedLabels — two labelled rows with dot + text -->
+                    <StackPanel Margin="0,0,0,15" HorizontalAlignment="Center">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DataContext.StateIndicatorStyle, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" Value="StackedLabels">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <!-- Current state row -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4"
+                                    ToolTip="{Binding CurrentState, StringFormat='Current: {0}'}">
+                            <TextBlock Text="Now" FontSize="8" FontWeight="SemiBold" Foreground="{StaticResource TextMuted}"
+                                       Width="28" VerticalAlignment="Center"/>
+                            <Ellipse Width="8" Height="8" VerticalAlignment="Center" Margin="0,0,5,0">
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Setter Property="Fill" Value="{StaticResource StatusUnknown}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding CurrentState}" Value="Running"><Setter Property="Fill" Value="{StaticResource StatusRunning}"/></DataTrigger>
+                                            <DataTrigger Binding="{Binding CurrentState}" Value="Not Running"><Setter Property="Fill" Value="{StaticResource StatusStopped}"/></DataTrigger>
+                                            <DataTrigger Binding="{Binding CurrentState}" Value="Stopped"><Setter Property="Fill" Value="{StaticResource StatusStopped}"/></DataTrigger>
+                                            <DataTrigger Binding="{Binding CurrentState}" Value="Not Found"><Setter Property="Fill" Value="{StaticResource StatusNotFound}"/></DataTrigger>
+                                            <DataTrigger Binding="{Binding CurrentState}" Value="Error"><Setter Property="Fill" Value="{StaticResource StatusError}"/></DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+                            <TextBlock Text="{Binding CurrentState}" FontSize="10" VerticalAlignment="Center"
+                                       Foreground="{StaticResource TextPrimary}"/>
+                        </StackPanel>
+                        <!-- Desired state row -->
+                        <StackPanel Orientation="Horizontal"
+                                    ToolTip="{Binding DesiredState, StringFormat='Desired: {0}'}">
+                            <TextBlock Text="Want" FontSize="8" FontWeight="SemiBold" Foreground="{StaticResource TextMuted}"
+                                       Width="28" VerticalAlignment="Center"/>
+                            <Ellipse Width="8" Height="8" VerticalAlignment="Center" Margin="0,0,5,0">
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Setter Property="Fill" Value="{StaticResource StatusUnknown}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding DesiredState}" Value="Running"><Setter Property="Fill" Value="{StaticResource StatusRunning}"/></DataTrigger>
+                                            <DataTrigger Binding="{Binding DesiredState}" Value="Stopped"><Setter Property="Fill" Value="{StaticResource StatusStopped}"/></DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+                            <TextBlock Text="{Binding DesiredState}" FontSize="10" VerticalAlignment="Center"
+                                       Foreground="{StaticResource TextMuted}"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Option C: SizedDots — small outline ring (desired) + arrow + large solid dot (current) -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,15">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DataContext.StateIndicatorStyle, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" Value="SizedDots">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <!-- Desired: small outline ring -->
+                        <Ellipse Width="9" Height="9" Fill="Transparent" StrokeThickness="1.5" VerticalAlignment="Center"
+                                 ToolTip="{Binding DesiredState, StringFormat='Desired: {0}'}">
                             <Ellipse.Style>
                                 <Style TargetType="Ellipse">
+                                    <Setter Property="Stroke" Value="{StaticResource StatusUnknown}"/>
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding CurrentState}" Value="Running">
-                                            <Setter Property="Fill" Value="{StaticResource StatusRunning}"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding CurrentState}" Value="Not Running">
-                                            <Setter Property="Fill" Value="{StaticResource StatusStopped}"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding CurrentState}" Value="Stopped">
-                                            <Setter Property="Fill" Value="{StaticResource StatusStopped}"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding CurrentState}" Value="Unknown">
-                                            <Setter Property="Fill" Value="{StaticResource StatusUnknown}"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding CurrentState}" Value="Not Found">
-                                            <Setter Property="Fill" Value="{StaticResource StatusNotFound}"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding CurrentState}" Value="Error">
-                                            <Setter Property="Fill" Value="{StaticResource StatusError}"/>
-                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding DesiredState}" Value="Running"><Setter Property="Stroke" Value="{StaticResource StatusRunning}"/></DataTrigger>
+                                        <DataTrigger Binding="{Binding DesiredState}" Value="Stopped"><Setter Property="Stroke" Value="{StaticResource StatusStopped}"/></DataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </Ellipse.Style>
                         </Ellipse>
-                        <TextBlock Text="{Binding CurrentState}"
-                                   Style="{StaticResource StatusText}"/>
+                        <TextBlock Text="→" FontSize="10" Foreground="{StaticResource TextMuted}"
+                                   Margin="8,0" VerticalAlignment="Center"/>
+                        <!-- Current: large solid dot -->
+                        <Ellipse Width="13" Height="13" VerticalAlignment="Center"
+                                 ToolTip="{Binding CurrentState, StringFormat='Current: {0}'}">
+                            <Ellipse.Style>
+                                <Style TargetType="Ellipse">
+                                    <Setter Property="Fill" Value="{StaticResource StatusUnknown}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding CurrentState}" Value="Running"><Setter Property="Fill" Value="{StaticResource StatusRunning}"/></DataTrigger>
+                                        <DataTrigger Binding="{Binding CurrentState}" Value="Not Running"><Setter Property="Fill" Value="{StaticResource StatusStopped}"/></DataTrigger>
+                                        <DataTrigger Binding="{Binding CurrentState}" Value="Stopped"><Setter Property="Fill" Value="{StaticResource StatusStopped}"/></DataTrigger>
+                                        <DataTrigger Binding="{Binding CurrentState}" Value="Not Found"><Setter Property="Fill" Value="{StaticResource StatusNotFound}"/></DataTrigger>
+                                        <DataTrigger Binding="{Binding CurrentState}" Value="Error"><Setter Property="Fill" Value="{StaticResource StatusError}"/></DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Ellipse.Style>
+                        </Ellipse>
                     </StackPanel>
-
-                    <!-- Toggle Switch -->
-                    <CheckBox x:Name="ToggleSwitch"
-                              IsChecked="{Binding IsDesiredRunning, Mode=TwoWay}"
-                              HorizontalAlignment="Center"
-                              ToolTip="Toggle to set desired state: ON = Start when profile is applied, OFF = Stop when profile is applied">
-                        <CheckBox.Style>
-                            <Style TargetType="CheckBox" BasedOn="{StaticResource ToggleSwitchStyle}">
-                                <Style.Triggers>
-                                    <!-- Disable toggle switch if item doesn't exist -->
-                                    <DataTrigger Binding="{Binding Exists}" Value="False">
-                                        <Setter Property="IsEnabled" Value="False"/>
-                                        <Setter Property="ToolTip" Value="This item was not found on the system"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </CheckBox.Style>
-                    </CheckBox>
                 </StackPanel>
 
                 <!-- Selection Checkmark - Top Left Corner -->
@@ -296,6 +395,30 @@
                                VerticalAlignment="Center"/>
                 </Border>
 
+                <!-- Type badge — top-left, mirrors gear positioning -->
+                <Border VerticalAlignment="Top" HorizontalAlignment="Left"
+                        Margin="5,5,0,0"
+                        Padding="4,2"
+                        CornerRadius="3"
+                        Background="{StaticResource BackgroundTertiary}"
+                        IsHitTestVisible="False"
+                        Panel.ZIndex="1">
+                    <TextBlock FontSize="8" FontWeight="SemiBold">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="APP"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding TargetType}" Value="Service">
+                                        <Setter Property="Text" Value="SVC"/>
+                                        <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Border>
+
                 <!-- Gear Icon - Top Right Corner (Visible on hover) -->
                 <Button Content="⚙️"
                         Background="Transparent"
@@ -304,7 +427,7 @@
                         Foreground="{StaticResource TextSecondary}"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Top"
-                        Margin="0,-5,-5,0"
+                        Margin="0,5,5,0"
                         Padding="5"
                         Cursor="Hand"
                         ToolTip="Edit item settings"

@@ -15,6 +15,7 @@
         WindowState="Maximized">
     <Window.InputBindings>
         <KeyBinding Key="S" Modifiers="Control" Command="{Binding ApplyCommand}"/>
+        <KeyBinding Key="Escape" Command="{Binding ExitCardSelectionModeCommand}"/>
     </Window.InputBindings>
     <Window.Resources>
         <ResourceDictionary>
@@ -315,7 +316,7 @@
                                 <Setter Property="Opacity" Value="0"/>
                                 <Setter Property="Margin" Value="0"/>
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding HasCardItemsSelection}" Value="True">
+                                    <DataTrigger Binding="{Binding IsCardSelectionMode}" Value="True">
                                         <Setter Property="MaxHeight" Value="200"/>
                                         <Setter Property="Margin" Value="0,0,0,10"/>
                                         <DataTrigger.EnterActions>
@@ -359,7 +360,12 @@
                                         Style="{StaticResource SecondaryButtonStyle}"
                                         Foreground="{StaticResource TextSecondary}"
                                         FontSize="12" Padding="10,5" Margin="0,0,6,0"/>
-                                <Button Content="✕ Clear"
+                                <Button Content="✕ Remove"
+                                        Command="{Binding RemoveSelectedCardItemsCommand}"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        Foreground="{StaticResource StatusStopped}"
+                                        FontSize="12" Padding="10,5" Margin="0,0,6,0"/>
+                                <Button Content="✕ Cancel"
                                         Command="{Binding ClearCardSelectionCommand}"
                                         Style="{StaticResource SecondaryButtonStyle}"
                                         FontSize="12" Padding="10,5"/>
@@ -371,42 +377,93 @@
                         </DockPanel>
                     </Border>
 
-                    <ListView x:Name="ProfileItemsList"
-                              Style="{StaticResource CardListViewStyle}"
-                              ItemContainerStyle="{StaticResource CardListViewItemStyle}"
-                              ItemTemplate="{StaticResource ProfileItemCardTemplate}"
-                              ItemsSource="{Binding CardProfileItemsView}"
-                              Margin="0"
-                              SelectionMode="Extended"
-                              SelectionChanged="ProfileItemsList_SelectionChanged">
-                        <ListView.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel Orientation="Horizontal"/>
-                            </ItemsPanelTemplate>
-                        </ListView.ItemsPanel>
-                    </ListView>
+                    <Grid ClipToBounds="True">
+                        <ListView x:Name="ProfileItemsList"
+                                  Style="{StaticResource CardListViewStyle}"
+                                  ItemContainerStyle="{StaticResource CardListViewItemStyle}"
+                                  ItemTemplate="{StaticResource ProfileItemCardTemplate}"
+                                  ItemsSource="{Binding CardProfileItemsView}"
+                                  Margin="0"
+                                  SelectionMode="Multiple"
+                                  PreviewMouseWheel="ProfileItemsList_PreviewMouseWheel"
+                                  PreviewMouseLeftButtonDown="ProfileItemsList_PreviewMouseLeftButtonDown"
+                                  PreviewMouseLeftButtonUp="ProfileItemsList_PreviewMouseLeftButtonUp"
+                                  PreviewMouseMove="ProfileItemsList_PreviewMouseMove"
+                                  Loaded="ProfileItemsList_Loaded">
+                            <ListView.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ListView.ItemsPanel>
+                        </ListView>
+                        <Rectangle x:Name="ProfileItemsLeftFade"
+                                   Width="60" HorizontalAlignment="Left"
+                                   IsHitTestVisible="False" Panel.ZIndex="1" Opacity="0">
+                            <Rectangle.Fill>
+                                <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                                    <GradientStop Color="#1A1A20" Offset="0"/>
+                                    <GradientStop Color="#001A1A20" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <Rectangle x:Name="ProfileItemsRightFade"
+                                   Width="60" HorizontalAlignment="Right"
+                                   IsHitTestVisible="False" Panel.ZIndex="1" Opacity="0">
+                            <Rectangle.Fill>
+                                <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                                    <GradientStop Color="#001A1A20" Offset="0"/>
+                                    <GradientStop Color="#1A1A20" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Rectangle.Fill>
+                        </Rectangle>
+                    </Grid>
                 </StackPanel>
 
                 <DockPanel Margin="0,10,0,10">
                     <TextBlock Text="New Items Found (Needs Review)" Style="{StaticResource SectionHeaderText}"/>
                 </DockPanel>
-                <ListView Style="{StaticResource CardListViewStyle}"
-                          ItemContainerStyle="{StaticResource CardListViewItemStyle}"
-                          ItemTemplate="{StaticResource NeedsReviewCardTemplate}"
-                          ItemsSource="{Binding CardNeedsReviewView}"
-                          PreviewMouseWheel="ListView_PreviewMouseWheel">
-                    <ListView.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal"/>
-                        </ItemsPanelTemplate>
-                    </ListView.ItemsPanel>
-                </ListView>
+                <Grid ClipToBounds="True">
+                    <ListView x:Name="NewItemsList"
+                              Style="{StaticResource CardListViewStyle}"
+                              ItemContainerStyle="{StaticResource CardListViewItemStyle}"
+                              ItemTemplate="{StaticResource NeedsReviewCardTemplate}"
+                              ItemsSource="{Binding CardNeedsReviewView}"
+                              PreviewMouseWheel="NewItemsList_PreviewMouseWheel"
+                              Loaded="NewItemsList_Loaded">
+                        <ListView.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ListView.ItemsPanel>
+                    </ListView>
+                    <Rectangle x:Name="NewItemsLeftFade"
+                               Width="60" HorizontalAlignment="Left"
+                               IsHitTestVisible="False" Panel.ZIndex="1" Opacity="0">
+                        <Rectangle.Fill>
+                            <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                                <GradientStop Color="#1A1A20" Offset="0"/>
+                                <GradientStop Color="#001A1A20" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Rectangle.Fill>
+                    </Rectangle>
+                    <Rectangle x:Name="NewItemsRightFade"
+                               Width="60" HorizontalAlignment="Right"
+                               IsHitTestVisible="False" Panel.ZIndex="1" Opacity="0">
+                        <Rectangle.Fill>
+                            <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                                <GradientStop Color="#001A1A20" Offset="0"/>
+                                <GradientStop Color="#1A1A20" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Rectangle.Fill>
+                    </Rectangle>
+                </Grid>
                 </StackPanel>
             </ScrollViewer>
         </Border>
 
         <!-- Item Settings Drawer Overlay -->
         <Grid Grid.RowSpan="5" Panel.ZIndex="100"
+              ClipToBounds="True"
               IsHitTestVisible="{Binding IsItemSettingsPanelOpen}">
 
             <!-- Semi-transparent backdrop (click to close) -->
