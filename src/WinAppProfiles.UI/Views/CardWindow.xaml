@@ -454,6 +454,8 @@
                                             <Storyboard>
                                                 <DoubleAnimation From="1" Storyboard.TargetProperty="Opacity"
                                                                  To="0" Duration="0:0:0.1"/>
+                                                <DoubleAnimation Storyboard.TargetProperty="MaxHeight"
+                                                                 To="0" Duration="0:0:0.1"/>
                                             </Storyboard>
                                         </BeginStoryboard>
                                     </DataTrigger.ExitActions>
