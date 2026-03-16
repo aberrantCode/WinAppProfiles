@@ -743,6 +743,7 @@
                                         <DockPanel Margin="0,0,0,16">
                                             <CheckBox DockPanel.Dock="Right"
                                                       IsChecked="{Binding EditOnlyApplyOnBattery, Mode=TwoWay}"
+                                                      Style="{StaticResource SettingsCheckBoxStyle}"
                                                       VerticalAlignment="Top"/>
                                             <StackPanel Margin="0,0,8,0">
                                                 <TextBlock Text="Battery Mode Only"
@@ -758,6 +759,7 @@
                                             <CheckBox DockPanel.Dock="Right"
                                                       IsChecked="{Binding EditForceMinimizedOnStart, Mode=TwoWay}"
                                                       IsEnabled="{Binding IsEditDesiredRunning}"
+                                                      Style="{StaticResource SettingsCheckBoxStyle}"
                                                       VerticalAlignment="Top"/>
                                             <StackPanel Margin="0,0,8,0">
                                                 <TextBlock Text="Force Minimized on Start"
