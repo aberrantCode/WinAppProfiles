@@ -13,7 +13,8 @@ public sealed class StartupTaskRegistrar
 
     public bool EnsureStartupTask(string appExecutablePath, string taskName)
     {
-        if (string.IsNullOrWhiteSpace(appExecutablePath) || string.IsNullOrWhiteSpace(taskName))
+        var startupTargetPath = ResolveStartupTargetPath(appExecutablePath);
+        if (string.IsNullOrWhiteSpace(startupTargetPath) || string.IsNullOrWhiteSpace(taskName))
         {
             return false;
         }
@@ -31,7 +32,7 @@ public sealed class StartupTaskRegistrar
                 "/TN",
                 taskName,
                 "/TR",
-                $"\"{appExecutablePath}\""
+                $"\"{startupTargetPath}\""
             ]);
 
             if (process is null)
@@ -100,7 +101,23 @@ public sealed class StartupTaskRegistrar
         }
 
         var executingAssemblyPath = Assembly.GetExecutingAssembly().Location;
-        return string.IsNullOrWhiteSpace(executingAssemblyPath) ? null : executingAssemblyPath;
+        return ResolveStartupTargetPath(executingAssemblyPath);
+    }
+
+    internal static string? ResolveStartupTargetPath(string? appExecutablePath)
+    {
+        if (string.IsNullOrWhiteSpace(appExecutablePath))
+        {
+            return null;
+        }
+
+        if (!appExecutablePath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+        {
+            return appExecutablePath;
+        }
+
+        var executablePath = Path.ChangeExtension(appExecutablePath, ".exe");
+        return File.Exists(executablePath) ? executablePath : null;
     }
 
     private static Process? StartSchtasks(IEnumerable<string> arguments)
