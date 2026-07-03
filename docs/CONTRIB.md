@@ -32,7 +32,7 @@ dotnet test WinAppProfiles.sln -c Debug
 
 | Script | Command | Description |
 |--------|---------|-------------|
-| Smart build + launch | `pwsh scripts/run-debug.ps1` | Rebuilds only when source files are newer than the executable, then launches the app |
+| Smart build + launch | `pwsh scripts/Start-App.ps1` | Rebuilds only when source files are newer than the executable, then launches the app |
 | Build (Debug) | `dotnet build WinAppProfiles.sln -c Debug` | Full solution build in Debug configuration |
 | Build (Release) | `dotnet build WinAppProfiles.sln -c Release` | Full solution build in Release configuration |
 | Run | `dotnet run --project src/WinAppProfiles.UI -c Debug` | Build and run the UI project |
@@ -42,14 +42,14 @@ dotnet test WinAppProfiles.sln -c Debug
 | Test (specific) | `dotnet test --filter "FullyQualifiedName~<TestName>"` | Run a single test by name |
 | MSIX package | `pwsh src/WinAppProfiles.Package/build-msix.ps1` | Build distributable MSIX package |
 
-### `scripts/run-debug.ps1` Options
+### `scripts/Start-App.ps1` Options
 
 ```powershell
 # Default: Debug build
-pwsh scripts/run-debug.ps1
+pwsh scripts/Start-App.ps1
 
 # Specify configuration explicitly
-pwsh scripts/run-debug.ps1 -Configuration Release
+pwsh scripts/Start-App.ps1 -Configuration Release
 ```
 
 The script:
@@ -76,7 +76,7 @@ WinAppProfiles/
 │   ├── WinAppProfiles.Unit/          # Fast unit tests (xUnit, Moq, FluentAssertions)
 │   └── WinAppProfiles.Integration/   # Infrastructure integration tests (real SQLite)
 ├── scripts/
-│   └── run-debug.ps1                 # Smart build + launch script
+│   └── Start-App.ps1                 # Smart build + launch script
 ├── assets/                           # Icons, screenshots, UI mocks
 └── docs/                             # Documentation
 ```

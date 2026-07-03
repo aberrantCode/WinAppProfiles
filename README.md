@@ -27,7 +27,7 @@ Run locally:
 4. `dotnet run --project src/WinAppProfiles.UI -c Debug`
 
 Alternative launch (auto-builds when needed):
-- `pwsh scripts/run-debug.ps1`
+- `pwsh scripts/Start-App.ps1`
 
 ## Notes
 ### Local data and logs

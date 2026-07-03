@@ -2,21 +2,25 @@ using System.Windows.Input;
 using System.Linq;
 using WinAppProfiles.Core.Abstractions;
 using WinAppProfiles.Core.Models;
+using WinAppProfiles.Infrastructure.Startup;
 
 namespace WinAppProfiles.UI.ViewModels;
 
 public sealed class SettingsViewModel : ObservableObject
 {
+    private const string StartupTaskName = "WinAppProfiles";
     private readonly IAppSettingsRepository _appSettingsRepository;
     private readonly IProfileService _profileService;
+    private readonly StartupTaskRegistrar? _startupTaskRegistrar;
     private AppSettings _settings;
     private AppSettings _originalSettings = new AppSettings(); // To track changes
     private IReadOnlyList<Profile> _availableProfiles = [];
 
-    public SettingsViewModel(IAppSettingsRepository appSettingsRepository, IProfileService profileService)
+    public SettingsViewModel(IAppSettingsRepository appSettingsRepository, IProfileService profileService, StartupTaskRegistrar? startupTaskRegistrar = null)
     {
         _appSettingsRepository = appSettingsRepository;
         _profileService = profileService;
+        _startupTaskRegistrar = startupTaskRegistrar;
         _settings = new AppSettings(); // Initialize with default settings
 
         SaveCommand = new AsyncRelayCommand(SaveAsync, () => HasChanges);
@@ -63,6 +67,18 @@ public sealed class SettingsViewModel : ObservableObject
         {
             if (_settings.AutoApplyDefaultProfile == value) return;
             _settings.AutoApplyDefaultProfile = value;
+            OnPropertyChanged();
+            ((AsyncRelayCommand)SaveCommand).NotifyCanExecuteChanged();
+        }
+    }
+
+    public bool StartWithWindows
+    {
+        get => _settings.StartWithWindows;
+        set
+        {
+            if (_settings.StartWithWindows == value) return;
+            _settings.StartWithWindows = value;
             OnPropertyChanged();
             ((AsyncRelayCommand)SaveCommand).NotifyCanExecuteChanged();
         }
@@ -153,6 +169,7 @@ public sealed class SettingsViewModel : ObservableObject
     private async Task SaveAsync()
     {
         await _appSettingsRepository.SaveSettingsAsync(Settings);
+        ApplyStartupTaskSetting();
         _originalSettings = Settings.Clone(); // Update original settings after saving
         ((AsyncRelayCommand)SaveCommand).NotifyCanExecuteChanged(); // Update CanExecute status
         RequestClose?.Invoke();
@@ -162,5 +179,21 @@ public sealed class SettingsViewModel : ObservableObject
     {
         RequestClose?.Invoke();
         return Task.CompletedTask;
+    }
+
+    private void ApplyStartupTaskSetting()
+    {
+        if (_startupTaskRegistrar is null)
+        {
+            return;
+        }
+
+        if (Settings.StartWithWindows)
+        {
+            _startupTaskRegistrar.EnsureStartupTaskForCurrentProcess(StartupTaskName);
+            return;
+        }
+
+        _startupTaskRegistrar.RemoveStartupTask(StartupTaskName);
     }
 }
