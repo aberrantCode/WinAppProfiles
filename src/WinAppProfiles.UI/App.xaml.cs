@@ -1,5 +1,4 @@
 using System.IO;
-using System.Reflection;
 using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Extensions.Configuration;
@@ -22,6 +21,7 @@ namespace WinAppProfiles.UI;
 
 public partial class App : System.Windows.Application
 {
+    private const string StartupTaskName = "WinAppProfiles";
     private IHost? _host;
     public IHost? Host => _host;
     private const string MutexName = "WinAppProfilesSingleInstanceMutex"; // Unique name for the mutex
@@ -126,11 +126,12 @@ public partial class App : System.Windows.Application
             mainViewModel.IsDarkMode = appSettings.EnableDarkMode; // Keep ViewModel in sync
 
             var registrar = _host.Services.GetRequiredService<StartupTaskRegistrar>();
-            var currentExe = Assembly.GetExecutingAssembly().Location;
-            var startupTaskCreated = registrar.EnsureStartupTask(currentExe, "WinAppProfiles");
-            if (!startupTaskCreated)
+            var startupTaskConfigured = appSettings.StartWithWindows
+                ? registrar.EnsureStartupTaskForCurrentProcess(StartupTaskName)
+                : registrar.RemoveStartupTask(StartupTaskName);
+            if (!startupTaskConfigured)
             {
-                Log.Warning("Startup task registration was skipped or failed.");
+                Log.Warning("Startup task configuration was skipped or failed.");
             }
 
             await SeedDefaultProfileAsync(profileService);
@@ -255,158 +256,8 @@ public partial class App : System.Windows.Application
 
         await profileService.CreateProfileAsync(new Profile
         {
-            Name = "Development",
-            IsDefault = true,
-            Items =
-            [
-                // Applications - Diverse set, some running, some stopped, some unknown state
-                new ProfileItem
-                {
-                    TargetType = TargetType.Application,
-                    DisplayName = "Apple Stas",
-                    ExecutablePath = @"C:\Program Files\Apple\AppleStas.exe", // Placeholder path
-                    DesiredState = DesiredState.Running,
-                    IsReviewed = true
-                },
-                new ProfileItem
-                {
-                    TargetType = TargetType.Application,
-                    DisplayName = "Application Service",
-                    ExecutablePath = @"C:\Program Files\AppService\AppService.exe", // Placeholder path
-                    DesiredState = DesiredState.Stopped,
-                    IsReviewed = true
-                },
-                new ProfileItem
-                {
-                    TargetType = TargetType.Application,
-                    DisplayName = "Microsoft Edge Serveshot",
-                    ExecutablePath = @"C:\Program Files\Microsoft Edge\Application\msedge.exe",
-                    DesiredState = DesiredState.Stopped,
-                    IsReviewed = true
-                },
-                new ProfileItem
-                {
-                    TargetType = TargetType.Application,
-                    DisplayName = "Microsoft Edge",
-                    ExecutablePath = @"C:\Program Files\Microsoft Edge\Application\msedge.exe",
-                    DesiredState = DesiredState.Running,
-                    IsReviewed = true
-                },
-                new ProfileItem
-                {
-                    TargetType = TargetType.Application,
-                    DisplayName = "Windows Eateltator",
-                    ExecutablePath = @"C:\Windows\System32\Eateltator.exe", // Placeholder path
-                    DesiredState = DesiredState.Stopped,
-                    IsReviewed = true
-                },
-                new ProfileItem
-                {
-                    TargetType = TargetType.Application,
-                    DisplayName = "Windows 6ramehuit",
-                    ExecutablePath = @"C:\Windows\System32\6ramehuit.exe", // Placeholder path
-                    DesiredState = DesiredState.Ignore, // Example of ignore
-                    IsReviewed = true
-                },
-                new ProfileItem
-                {
-                    TargetType = TargetType.Application,
-                    DisplayName = "Microsoft Emlon",
-                    ExecutablePath = @"C:\Program Files\Microsoft Office\Emlon.exe", // Placeholder path
-                    DesiredState = DesiredState.Running,
-                    IsReviewed = true
-                },
-                new ProfileItem
-                {
-                    TargetType = TargetType.Application,
-                    DisplayName = "Microsoft Office",
-                    ExecutablePath = @"C:\Program Files\Microsoft Office\Office.exe", // Placeholder path
-                    DesiredState = DesiredState.Stopped,
-                    IsReviewed = true
-                },
-                new ProfileItem
-                {
-                    TargetType = TargetType.Application,
-                    DisplayName = "Microsoft Eocrelkop",
-                    ExecutablePath = @"C:\Program Files\Microsoft Office\Eocrelkop.exe", // Placeholder path
-                    DesiredState = DesiredState.Stopped,
-                    IsReviewed = true
-                },
-                new ProfileItem
-                {
-                    TargetType = TargetType.Application,
-                    DisplayName = "WinAppProfiles",
-                    ExecutablePath = Assembly.GetExecutingAssembly().Location,
-                    DesiredState = DesiredState.Running,
-                    IsReviewed = true
-                },
-                new ProfileItem
-                {
-                    TargetType = TargetType.Application,
-                    DisplayName = "Doux Chocker",
-                    ExecutablePath = @"C:\Program Files\Doux\DouxChocker.exe", // Placeholder path
-                    DesiredState = DesiredState.Running,
-                    IsReviewed = true
-                },
-                // Services - Example services
-                new ProfileItem
-                {
-                    TargetType = TargetType.Service,
-                    DisplayName = "IIS Admin Service",
-                    ServiceName = "IISADMIN",
-                    DesiredState = DesiredState.Running,
-                    IsReviewed = true
-                },
-                new ProfileItem
-                {
-                    TargetType = TargetType.Service,
-                    DisplayName = "Windows Search",
-                    ServiceName = "WSearch",
-                    DesiredState = DesiredState.Stopped,
-                    IsReviewed = true
-                },
-                new ProfileItem
-                {
-                    TargetType = TargetType.Service,
-                    DisplayName = "Print Spooler",
-                    ServiceName = "Spooler",
-                    DesiredState = DesiredState.Running,
-                    IsReviewed = true
-                },
-                new ProfileItem
-                {
-                    TargetType = TargetType.Service,
-                    DisplayName = "Windows Update",
-                    ServiceName = "wuauserv",
-                    DesiredState = DesiredState.Ignore,
-                    IsReviewed = true
-                },
-                // Needs Review Items (IsReviewed = false) - these are new discoveries
-                new ProfileItem
-                {
-                    TargetType = TargetType.Application,
-                    DisplayName = "Zoom",
-                    ExecutablePath = @"C:\Users\" + Environment.UserName + @"\AppData\Roaming\Zoom\bin\Zoom.exe",
-                    DesiredState = DesiredState.Stopped,
-                    IsReviewed = false
-                },
-                new ProfileItem
-                {
-                    TargetType = TargetType.Application,
-                    DisplayName = "Discord",
-                    ExecutablePath = @"C:\Users\" + Environment.UserName + @"\AppData\Local\Discord\app-1.0.9003\Discord.exe",
-                    DesiredState = DesiredState.Stopped,
-                    IsReviewed = false
-                },
-                new ProfileItem
-                {
-                    TargetType = TargetType.Service,
-                    DisplayName = "SQL Server Browser",
-                    ServiceName = "SQLBrowser",
-                    DesiredState = DesiredState.Stopped,
-                    IsReviewed = false
-                }
-            ]
+            Name = "Default",
+            IsDefault = true
         });
     }
 }

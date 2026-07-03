@@ -125,4 +125,98 @@ public sealed class ProfileServiceTests
         needsReview.Single().IsReviewed.Should().BeFalse();
         needsReview.Single().DesiredState.Should().Be(DesiredState.Ignore);
     }
+
+    [Fact]
+    public async Task ApplyProfileAsync_ItemOnlyAppliesOnBatteryWhenPluggedIn_SkipsItem()
+    {
+        var profileId = Guid.NewGuid();
+        var profile = new Profile
+        {
+            Id = profileId,
+            Name = "Battery",
+            Items =
+            [
+                new ProfileItem
+                {
+                    Id = Guid.NewGuid(),
+                    TargetType = TargetType.Application,
+                    DisplayName = "Battery App",
+                    ProcessName = "battery-app",
+                    DesiredState = DesiredState.Stopped,
+                    OnlyApplyOnBattery = true,
+                    IsReviewed = true
+                }
+            ]
+        };
+
+        var repository = new Mock<IProfileRepository>();
+        repository.Setup(x => x.GetProfileByIdAsync(profileId, It.IsAny<CancellationToken>())).ReturnsAsync(profile);
+
+        var stateController = new Mock<IStateController>();
+        var discovery = new Mock<IDiscoveryService>();
+        var battery = new Mock<IBatteryStatusProvider>();
+        battery.Setup(x => x.IsOnBattery()).Returns(false);
+
+        var service = new ProfileService(repository.Object, stateController.Object, discovery.Object, battery.Object);
+
+        var result = await service.ApplyProfileAsync(profileId);
+
+        result.Success.Should().BeTrue();
+        result.Items.Should().BeEmpty();
+        stateController.Verify(
+            x => x.EnsureProcessStateAsync(It.IsAny<ProcessTarget>(), It.IsAny<DesiredState>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        repository.Verify(x => x.SaveApplyResultAsync(It.IsAny<ApplyResult>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ApplyProfileAsync_ApplicationItem_MapsStartupOptionsToProcessTarget()
+    {
+        var profileId = Guid.NewGuid();
+        var profile = new Profile
+        {
+            Id = profileId,
+            Name = "Startup Options",
+            Items =
+            [
+                new ProfileItem
+                {
+                    Id = Guid.NewGuid(),
+                    TargetType = TargetType.Application,
+                    DisplayName = "Tool",
+                    ProcessName = "tool",
+                    ExecutablePath = "C:\\Tools\\tool.exe",
+                    DesiredState = DesiredState.Running,
+                    StartupDelaySeconds = 7,
+                    ForceMinimizedOnStart = true,
+                    IsReviewed = true
+                }
+            ]
+        };
+
+        var repository = new Mock<IProfileRepository>();
+        repository.Setup(x => x.GetProfileByIdAsync(profileId, It.IsAny<CancellationToken>())).ReturnsAsync(profile);
+
+        ProcessTarget? capturedTarget = null;
+        var stateController = new Mock<IStateController>();
+        stateController
+            .Setup(x => x.EnsureProcessStateAsync(It.IsAny<ProcessTarget>(), DesiredState.Running, It.IsAny<CancellationToken>()))
+            .Callback<ProcessTarget, DesiredState, CancellationToken>((target, _, _) => capturedTarget = target)
+            .ReturnsAsync((true, DesiredState.Running, null, null));
+
+        var discovery = new Mock<IDiscoveryService>();
+        var battery = new Mock<IBatteryStatusProvider>();
+        battery.Setup(x => x.IsOnBattery()).Returns(false);
+
+        var service = new ProfileService(repository.Object, stateController.Object, discovery.Object, battery.Object);
+
+        await service.ApplyProfileAsync(profileId);
+
+        capturedTarget.Should().NotBeNull();
+        capturedTarget!.DisplayName.Should().Be("Tool");
+        capturedTarget.ProcessName.Should().Be("tool");
+        capturedTarget.ExecutablePath.Should().Be("C:\\Tools\\tool.exe");
+        capturedTarget.StartupDelaySeconds.Should().Be(7);
+        capturedTarget.ForceMinimizedOnStart.Should().BeTrue();
+    }
 }

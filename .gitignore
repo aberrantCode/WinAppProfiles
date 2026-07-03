@@ -13,5 +13,7 @@ logs/
 !assets/mocks/*.png
 !assets/screenshots/*.png
 !assets/*.png
+!src/WinAppProfiles.Package/Images/*.png
+src/WinAppProfiles.Package/AppPackages/
 *_wpftmp.csproj
 nul

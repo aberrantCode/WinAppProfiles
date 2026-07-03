@@ -20,16 +20,12 @@ public sealed class SqliteAppSettingsRepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task GetSettingsAsync_ReturnsDefaults_OnFreshDatabase()
+    public async Task GetSettingsAsync_FreshDatabase_ReturnsAppSettingsDefaults()
     {
         var settings = await _repository.GetSettingsAsync();
+        var defaults = new AppSettings();
 
-        // All booleans default to false, GUIDs to Empty, enum to Default
-        settings.AutoApplyDefaultProfile.Should().BeFalse();
-        settings.EnableDarkMode.Should().BeFalse();
-        settings.MinimizeOnLaunch.Should().BeFalse();
-        settings.MinimizeToTrayOnClose.Should().BeFalse();
-        settings.DefaultInterfaceType.Should().Be(InterfaceType.Default);
+        settings.Should().BeEquivalentTo(defaults);
     }
 
     [Fact]
@@ -43,7 +39,9 @@ public sealed class SqliteAppSettingsRepositoryTests : IDisposable
             EnableDarkMode = true,
             MinimizeOnLaunch = true,
             MinimizeToTrayOnClose = true,
-            DefaultInterfaceType = InterfaceType.Cards
+            DefaultInterfaceType = InterfaceType.Cards,
+            StatusPollingIntervalSeconds = 17,
+            StateIndicatorStyle = StateIndicatorStyle.SizedDots
         };
 
         await _repository.SaveSettingsAsync(toSave);
@@ -55,6 +53,22 @@ public sealed class SqliteAppSettingsRepositoryTests : IDisposable
         loaded.MinimizeOnLaunch.Should().BeTrue();
         loaded.MinimizeToTrayOnClose.Should().BeTrue();
         loaded.DefaultInterfaceType.Should().Be(InterfaceType.Cards);
+        loaded.StatusPollingIntervalSeconds.Should().Be(17);
+        loaded.StateIndicatorStyle.Should().Be(StateIndicatorStyle.SizedDots);
+    }
+
+    [Fact]
+    public async Task SaveAndGetSettings_StatusPollingIntervalSeconds_RoundTrips()
+    {
+        var toSave = new AppSettings
+        {
+            StatusPollingIntervalSeconds = 30
+        };
+
+        await _repository.SaveSettingsAsync(toSave);
+        var loaded = await _repository.GetSettingsAsync();
+
+        loaded.StatusPollingIntervalSeconds.Should().Be(30);
     }
 
     [Fact]

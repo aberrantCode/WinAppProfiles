@@ -4,6 +4,7 @@ public sealed class AppSettings
 {
     public Guid DefaultProfileId { get; set; } = Guid.Empty;
     public bool AutoApplyDefaultProfile { get; set; } = false;
+    public bool StartWithWindows { get; set; } = false;
     public bool EnableDarkMode { get; set; } = false;
     public bool MinimizeOnLaunch { get; set; } = false;
     public bool MinimizeToTrayOnClose { get; set; } = false;
@@ -17,6 +18,7 @@ public sealed class AppSettings
         {
             DefaultProfileId = this.DefaultProfileId,
             AutoApplyDefaultProfile = this.AutoApplyDefaultProfile,
+            StartWithWindows = this.StartWithWindows,
             EnableDarkMode = this.EnableDarkMode,
             MinimizeOnLaunch = this.MinimizeOnLaunch,
             MinimizeToTrayOnClose = this.MinimizeToTrayOnClose,
@@ -31,6 +33,7 @@ public sealed class AppSettings
         return obj is AppSettings settings &&
                DefaultProfileId.Equals(settings.DefaultProfileId) &&
                AutoApplyDefaultProfile == settings.AutoApplyDefaultProfile &&
+               StartWithWindows == settings.StartWithWindows &&
                EnableDarkMode == settings.EnableDarkMode &&
                MinimizeOnLaunch == settings.MinimizeOnLaunch &&
                MinimizeToTrayOnClose == settings.MinimizeToTrayOnClose &&
@@ -41,6 +44,16 @@ public sealed class AppSettings
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(DefaultProfileId, AutoApplyDefaultProfile, EnableDarkMode, MinimizeOnLaunch, MinimizeToTrayOnClose, DefaultInterfaceType, StatusPollingIntervalSeconds, StateIndicatorStyle);
+        var hash = new HashCode();
+        hash.Add(DefaultProfileId);
+        hash.Add(AutoApplyDefaultProfile);
+        hash.Add(StartWithWindows);
+        hash.Add(EnableDarkMode);
+        hash.Add(MinimizeOnLaunch);
+        hash.Add(MinimizeToTrayOnClose);
+        hash.Add(DefaultInterfaceType);
+        hash.Add(StatusPollingIntervalSeconds);
+        hash.Add(StateIndicatorStyle);
+        return hash.ToHashCode();
     }
 }

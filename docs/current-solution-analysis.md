@@ -86,7 +86,7 @@ Generated: 2026-07-03
 
 ## Issues And Risks
 
-- [ ] Fix startup task target path.
+- [x] Fix startup task target path.
   - `App.xaml.cs` passes `Assembly.GetExecutingAssembly().Location` to `StartupTaskRegistrar`.
   - For modern .NET app hosts this can resolve to the assembly DLL path rather than the executable path.
   - Prefer `Environment.ProcessPath` or `Process.GetCurrentProcess().MainModule?.FileName`.
@@ -94,14 +94,14 @@ Generated: 2026-07-03
   - Repository guidance says the app runs elevated for service control.
   - `src/WinAppProfiles.UI/app.manifest` requests `asInvoker`.
   - Service start/stop will fail for protected services unless the app is launched elevated by the user or permissions are otherwise granted.
-- [ ] Decide whether automatic scheduled-task registration should be opt-in.
+- [x] Decide whether automatic scheduled-task registration should be opt-in.
   - The app attempts to create/update a logon scheduled task on every startup.
   - There is no visible setting for "launch at login" and no unregister path.
-- [ ] Fix seeded default profile quality.
+- [x] Fix seeded default profile quality.
   - `SeedDefaultProfileAsync` creates a `Development` profile with placeholder application names and paths.
   - Most seeded application items omit `ProcessName`, so applying them returns `INVALID_TARGET`.
   - Several placeholder paths cannot exist on real machines.
-- [ ] Persist `StatusPollingIntervalSeconds`.
+- [x] Persist `StatusPollingIntervalSeconds`.
   - `AppSettings` and `SettingsViewModel` expose it.
   - `SqliteAppSettingsRepository.GetSettingsAsync` and `SaveSettingsAsync` do not read/write it.
   - The slider can change runtime behavior but the value does not survive restart.
@@ -125,7 +125,7 @@ Generated: 2026-07-03
   - `SqliteAppSettingsRepository` creates its own table in its constructor.
   - `DbInitializer` owns the rest of the schema.
   - This split makes migrations harder to reason about.
-- [ ] Fix README and docs command drift.
+- [x] Fix README and docs command drift.
   - `README.md`, `USER_GUIDE.md`, and `docs/CONTRIB.md` mention `scripts/run-debug.ps1`.
   - The repository contains `scripts/Start-App.ps1`.
 - [ ] Fix packaging asset and release readiness gaps.
@@ -133,7 +133,8 @@ Generated: 2026-07-03
   - Those files are not present in `src/WinAppProfiles.Package`.
   - `Package.appxmanifest` still uses placeholder identity/publisher values.
   - App package output under `src/WinAppProfiles.Package/AppPackages` is present in the tree and totals about 70 MB; build artifacts should normally be ignored.
-- [ ] Review Dapper transaction usage in `SaveApplyResultAsync`.
+  - Actioned in `codex/action-solution-analysis`: package image references are backed by files and `AppPackages` artifacts are removed/ignored; manifest identity/publisher placeholders remain.
+- [x] Review Dapper transaction usage in `SaveApplyResultAsync`.
   - The first `ExecuteAsync` call includes `transaction` inside the anonymous parameter object instead of passing it as Dapper's transaction argument.
   - Later insert calls do the same.
   - The verification query does pass the transaction correctly.
@@ -146,15 +147,15 @@ Generated: 2026-07-03
 
 ## Test Coverage Gaps
 
-- [ ] Add integration tests for `SaveApplyResultAsync`.
+- [x] Add integration tests for `SaveApplyResultAsync`.
   - Verify apply run and item rows are persisted.
   - Verify transaction behavior on partial failure.
-- [ ] Add tests for `OnlyApplyOnBattery`.
+- [x] Add tests for `OnlyApplyOnBattery`.
   - Current `ProfileService` supports it, but there is no direct unit test proving skip behavior.
-- [ ] Add tests for `StartupDelaySeconds` and `ForceMinimizedOnStart` mapping into `ProcessTarget`.
+- [x] Add tests for `StartupDelaySeconds` and `ForceMinimizedOnStart` mapping into `ProcessTarget`.
 - [ ] Add tests for service `CanStop == false` and disabled service behavior.
-- [ ] Add tests for `SqliteAppSettingsRepository` round-tripping `StatusPollingIntervalSeconds`.
-- [ ] Add tests for settings default consistency between `AppSettings` and fresh database initialization.
+- [x] Add tests for `SqliteAppSettingsRepository` round-tripping `StatusPollingIntervalSeconds`.
+- [x] Add tests for settings default consistency between `AppSettings` and fresh database initialization.
 - [ ] Add tests for startup task command generation.
 - [ ] Add tests for `ProfileCreationWizardViewModel`.
   - Step navigation.
@@ -173,22 +174,22 @@ Generated: 2026-07-03
 
 ## Documentation Gaps
 
-- [ ] Update quick-start docs to use `scripts/Start-App.ps1` or rename the script to `run-debug.ps1`.
+- [x] Update quick-start docs to use `scripts/Start-App.ps1` or rename the script to `run-debug.ps1`.
 - [ ] Document the actual elevation model.
   - Current manifest is `asInvoker`.
   - Service operations may require launching as administrator.
-- [ ] Document startup task behavior as configurable or automatic.
-- [ ] Document the default profile seed as sample/demo data, or replace it with an empty/default profile.
+- [x] Document startup task behavior as configurable or automatic.
+- [x] Document the default profile seed as sample/demo data, or replace it with an empty/default profile.
 - [ ] Update user docs for tabbed/card interface switching and item settings drawer behavior.
 - [ ] Update docs once Low Power Wizard moves beyond phase 1 scaffolding.
 
 ## Suggested Priority Order
 
-- [ ] P0: Fix persisted settings gap for `StatusPollingIntervalSeconds`.
-- [ ] P0: Fix startup task executable path and decide opt-in/opt-out behavior.
-- [ ] P0: Remove or replace placeholder seeded profile data.
-- [ ] P1: Add `SaveApplyResultAsync` integration coverage and correct Dapper transaction usage if confirmed.
+- [x] P0: Fix persisted settings gap for `StatusPollingIntervalSeconds`.
+- [x] P0: Fix startup task executable path and decide opt-in/opt-out behavior.
+- [x] P0: Remove or replace placeholder seeded profile data.
+- [x] P1: Add `SaveApplyResultAsync` integration coverage and correct Dapper transaction usage if confirmed.
 - [ ] P1: Reconcile elevation model with service-control requirements.
-- [ ] P1: Fix docs command drift and packaging missing assets/artifacts.
+- [x] P1: Fix docs command drift and packaging missing assets/artifacts.
 - [ ] P2: Complete Low Power Wizard phase 2 before adding UI.
 - [ ] P2: Add direct profile-item creation and richer apply history/diagnostics.

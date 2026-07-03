@@ -7,7 +7,7 @@ WinAppProfiles manages two target types:
 - **Services**: start/stop via the Windows Service Control Manager.
 
 ## 1) Launch the app
-- `dotnet run --project src/WinAppProfiles.UI` (or `pwsh scripts/run-debug.ps1`).
+- `dotnet run --project src/WinAppProfiles.UI` (or `pwsh scripts/Start-App.ps1`).
 - The app opens to the **Application Profiles** window.
 
 On first launch (when no profiles exist yet), WinAppProfiles seeds a `Development` profile.
