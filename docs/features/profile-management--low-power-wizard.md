@@ -1,16 +1,29 @@
 ---
-feature: Low Power Wizard
+# Base — required
+feature: "Low Power Wizard"
 slug: low-power-wizard
-status: draft
+status: approved
 priority: p2
-area: Profile Management
-depends_on: []
-last_updated: 2026-04-09
+area: profile-management
+
+# Lifecycle dates
+date_drafted: 2026-04-09
+date_approved: 2026-04-09
+date_last_revised: 2026-07-04
+
+# Attribution
+author: Erik
+reviewer: Erik
+
+# Optional — related docs
+related: [docs/features/profile-management.md, docs/plans/low-power-wizard-plan.md]
 ---
 
 ## Overview
 
 A guided wizard that analyzes running processes and Windows services for power consumption, then generates (or updates) a "Low Power" profile. Uses a hybrid approach: a curated database of known battery-draining applications/services combined with live CPU and memory sampling over ~15 seconds. The user reviews categorized findings before committing, retaining full control over which items are included.
+
+**Build status (2026-07-04):** designed and phase 1 (of 4) delivered. `IPowerAnalysisService`, `PowerCandidate`, `PowerAnalysisResult`, `PowerFlagReason`, `KnownPowerHogEntry`, and the embedded `known-power-hogs.json` resource exist in `WinAppProfiles.Core` with passing unit tests. `WindowsPowerAnalysisService` (Infrastructure), the wizard UI (`LowPowerWizardViewModel` / `LowPowerWizard.xaml`), and the `MainViewModel` entry point are **not built** — `IPowerAnalysisService` is not even registered in DI yet. Everything below describes the target capability once phases 2–4 land, not current behavior; see `docs/current-solution-analysis.md` for the authoritative gap list and `docs/plans/low-power-wizard-plan.md` for phase tracking.
 
 ## Capabilities
 
@@ -77,3 +90,5 @@ A guided wizard that analyzes running processes and Windows services for power c
 - CPU sampling formula: `deltaProcessorTime / (samplingDuration × ProcessorCount) × 100`. This normalizes across different core counts.
 - The wizard follows the same ViewModel pattern as ProfileCreationWizardViewModel — a multi-step flow with step navigation commands.
 - Design document: `docs/plans/2026-04-09-low-power-wizard-design.md`
+- Delivery plan and phase status: `docs/plans/low-power-wizard-plan.md` — Phase 1 (Core domain models) is complete; Phases 2 (Infrastructure analysis service), 3 (WPF wizard UI), and 4 (integration/polish) are not started.
+- This spec now lives under the `profile-management` umbrella (`docs/features/profile-management.md`, "Sub-surfaces") rather than as a standalone topic; the file was moved from `docs/features/low-power-wizard.md` to `docs/features/profile-management--low-power-wizard.md` to follow the `<topic>--<descriptor>.md` sub-feature filename grammar.
