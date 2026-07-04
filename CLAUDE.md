@@ -17,7 +17,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 # Close any running instance first (builds will fail if app is running)
 # Then rebuild and launch:
-pwsh scripts/run-debug.ps1
+pwsh scripts/Start-App.ps1
 
 # Or manually:
 dotnet build src/WinAppProfiles.UI/WinAppProfiles.UI.csproj -c Debug
@@ -44,7 +44,7 @@ dotnet build WinAppProfiles.sln -c Debug
 dotnet run --project src/WinAppProfiles.UI -c Debug
 
 # Alternative: auto-builds and handles process cleanup
-pwsh scripts/run-debug.ps1
+pwsh scripts/Start-App.ps1
 ```
 
 ### Testing

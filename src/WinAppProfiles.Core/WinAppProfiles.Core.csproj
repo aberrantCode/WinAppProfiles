@@ -4,4 +4,7 @@
     <RootNamespace>WinAppProfiles.Core</RootNamespace>
     <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
   </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Data\known-power-hogs.json" />
+  </ItemGroup>
 </Project>

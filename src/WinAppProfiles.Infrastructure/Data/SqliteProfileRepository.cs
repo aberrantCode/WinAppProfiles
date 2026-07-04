@@ -176,9 +176,9 @@ public sealed class SqliteProfileRepository : IProfileRepository
                     {
                         Successful = result.Items.Count(x => x.Success),
                         Failed = result.Items.Count(x => !x.Success)
-                    }),
-                    transaction // Pass transaction object to Dapper
-                });
+                    })
+                },
+                transaction);
 
             // Verify if the runId exists after insertion
             var runExists = await connection.QuerySingleOrDefaultAsync<string>(
@@ -213,18 +213,18 @@ public sealed class SqliteProfileRepository : IProfileRepository
                         ActualState = item.ActualState.HasValue ? (int)item.ActualState.Value : (int?)null,
                         item.Success,
                         item.ErrorCode,
-                        item.ErrorMessage,
-                        transaction // Pass transaction object to Dapper
-                    });
+                        item.ErrorMessage
+                    },
+                    transaction);
             }
 
-            transaction.Commit(); // Commit the transaction if all operations succeed
+            transaction.Commit();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to save apply run with transaction for ProfileId: {ProfileId}, RunId: {RunId}", result.ProfileId, runId);
-            transaction.Rollback(); // Rollback on error
-            throw; // Re-throw to propagate the error
+            transaction.Rollback();
+            throw;
         }
     }
 

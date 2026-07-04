@@ -1,0 +1,657 @@
+{
+  "C:\\development\\WinAppProfiles\\scripts\\Start-App.ps1": {
+    "mtime": 1773679618.4855165,
+    "ast_hash": "f8728108fe3e962685af34aee664f5cb",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Core\\Abstractions\\IAppSettingsRepository.cs": {
+    "mtime": 1770679423.1849573,
+    "ast_hash": "5008931a998e7d771f94387e37856020",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Core\\Abstractions\\IBatteryStatusProvider.cs": {
+    "mtime": 1771455676.3039992,
+    "ast_hash": "26acb24ef0098db22831b7ad85e3e0e3",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Core\\Abstractions\\IDiscoveryService.cs": {
+    "mtime": 1770570255.107471,
+    "ast_hash": "1ba6a78d05c7dd13e0ccee6cfb867ea5",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Core\\Abstractions\\IPowerAnalysisService.cs": {
+    "mtime": 1775757986.3885405,
+    "ast_hash": "2a0976462649e7522d2b88dc83a371e7",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Core\\Abstractions\\IProfileRepository.cs": {
+    "mtime": 1771455619.524612,
+    "ast_hash": "8b9f718feaf786612adc38364a3d3d90",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Core\\Abstractions\\IProfileService.cs": {
+    "mtime": 1771455622.8297293,
+    "ast_hash": "718319bc6ae17db19232a3487362ff16",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Core\\Abstractions\\IStateController.cs": {
+    "mtime": 1770704106.752281,
+    "ast_hash": "9c163d9305c31974f7aeba5d3356de29",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Core\\Data\\known-power-hogs.json": {
+    "mtime": 1775758014.65167,
+    "ast_hash": "717c37ade6a8386fc4170685e6a67bb7",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Core\\Models\\ApplyResult.cs": {
+    "mtime": 1770570255.104748,
+    "ast_hash": "f9a2877cf9a35ab353ff55be8f6eab87",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Core\\Models\\AppSettings.cs": {
+    "mtime": 1773679618.4865139,
+    "ast_hash": "954269719dd159cf313511270572bc16",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Core\\Models\\DesiredState.cs": {
+    "mtime": 1770570255.100501,
+    "ast_hash": "9459517e93d89bc7b60474e2a54f3cc8",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Core\\Models\\InterfaceType.cs": {
+    "mtime": 1770778809.6314626,
+    "ast_hash": "af15d09975be86d557e7a797b36f3584",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Core\\Models\\KnownPowerHogEntry.cs": {
+    "mtime": 1775757986.0938861,
+    "ast_hash": "0b208544ca463374ca33e664f30b1e0f",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Core\\Models\\PowerAnalysisResult.cs": {
+    "mtime": 1775757985.8279016,
+    "ast_hash": "278c3eb269b50230cd3132aaaab2d28d",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Core\\Models\\PowerCandidate.cs": {
+    "mtime": 1775757980.394163,
+    "ast_hash": "41da48e9c06cc3ffcc0aded3b5513273",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Core\\Models\\PowerFlagReason.cs": {
+    "mtime": 1775757979.560452,
+    "ast_hash": "bcaf7619eb6486a3503aea2330701325",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Core\\Models\\ProcessTarget.cs": {
+    "mtime": 1771455672.8657403,
+    "ast_hash": "43eca633b9af69d66b1227297cf650e0",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Core\\Models\\Profile.cs": {
+    "mtime": 1770570255.103746,
+    "ast_hash": "16bbe5c277d47ca5cfa2e840ad56fba3",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Core\\Models\\ProfileItem.cs": {
+    "mtime": 1771408481.876674,
+    "ast_hash": "6cd689c362e824d63d53b3107c71a7de",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Core\\Models\\ServiceTarget.cs": {
+    "mtime": 1770570255.103746,
+    "ast_hash": "1975626282f97e66853cfe043df16a7c",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Core\\Models\\StateIndicatorStyle.cs": {
+    "mtime": 1773679618.4876459,
+    "ast_hash": "e559a7005693bb65a7a35cd1881f989c",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Core\\Models\\TargetType.cs": {
+    "mtime": 1770570255.1015005,
+    "ast_hash": "1032f983a642ed5283eb072293a72c12",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Core\\Services\\ProfileService.cs": {
+    "mtime": 1771455701.717228,
+    "ast_hash": "faf1eb0693f44e72653f53577600c632",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Infrastructure\\DependencyInjection.cs": {
+    "mtime": 1771455686.769532,
+    "ast_hash": "8349d49045db85fd692aa92800c9647a",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Infrastructure\\Data\\DbInitializer.cs": {
+    "mtime": 1771408481.8781853,
+    "ast_hash": "d8265f30900999ea191e40b687d27b80",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Infrastructure\\Data\\SqliteAppSettingsRepository.cs": {
+    "mtime": 1773679618.4891539,
+    "ast_hash": "f44ce7a9c02dece8aa2c10994d0fc629",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Infrastructure\\Data\\SqliteConnectionFactory.cs": {
+    "mtime": 1770673197.0921528,
+    "ast_hash": "860ce1eb419bc9374ec0b2c0306ff4e7",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Infrastructure\\Data\\SqliteProfileRepository.cs": {
+    "mtime": 1771455894.5394008,
+    "ast_hash": "f2c80ea801914e9b62326df954c96059",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Infrastructure\\Discovery\\WindowsDiscoveryService.cs": {
+    "mtime": 1770576287.4758613,
+    "ast_hash": "24ef3b2d61edf64d3b233c3c6b5e8cc4",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Infrastructure\\Execution\\WindowsBatteryStatusProvider.cs": {
+    "mtime": 1771455681.93143,
+    "ast_hash": "e29367c5923e53b5e696bfa372341390",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Infrastructure\\Execution\\WindowsStateController.cs": {
+    "mtime": 1771455706.7393787,
+    "ast_hash": "ae5ed4c1726b32e38084b4b8d0c61c99",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Infrastructure\\Startup\\StartupTaskRegistrar.cs": {
+    "mtime": 1770611595.4983191,
+    "ast_hash": "0e6165c8b6a5d204359e5976ee69c462",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Package\\build-msix.ps1": {
+    "mtime": 1770609149.6411102,
+    "ast_hash": "94a1a3bda30fab4a096d100a82d5c39b",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Package\\AppPackages\\WinAppProfiles.Package_1.0.0.0_x86_Test\\Add-AppDevPackage.ps1": {
+    "mtime": 1770615277.116001,
+    "ast_hash": "53e8e32a5a2258f96e54e3df3723e4b5",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Package\\AppPackages\\WinAppProfiles.Package_1.0.0.0_x86_Test\\Install.ps1": {
+    "mtime": 1770615277.127731,
+    "ast_hash": "3d76c26e92eb63a03b4d734c6621a24f",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Package\\AppPackages\\WinAppProfiles.Package_1.0.0.0_x86_Test\\TelemetryDependencies\\LogSideloadingTelemetry.ps1": {
+    "mtime": 1770615277.1297848,
+    "ast_hash": "68934eb26d29cd864fe31e7fa15081e5",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.UI\\App.xaml.cs": {
+    "mtime": 1771408481.8791916,
+    "ast_hash": "4dbcda53f8058b488e26839068d6a0e0",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.UI\\appsettings.json": {
+    "mtime": 1770580966.2611358,
+    "ast_hash": "dfa949e4dc4e0f4f72482c6e1ce014ce",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.UI\\Services\\IconCacheService.cs": {
+    "mtime": 1771408481.8811913,
+    "ast_hash": "e86594afb6f71c771bfb49eae5d4e436",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.UI\\Services\\IconExtractionService.cs": {
+    "mtime": 1771408481.8825648,
+    "ast_hash": "2011ed0b9cacd5467d364e9855e70262",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.UI\\Services\\IStatusMonitoringService.cs": {
+    "mtime": 1771408481.8811913,
+    "ast_hash": "3c1051e047ee88c3e8f13bf5b64a9da2",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.UI\\Services\\StatusMonitoringService.cs": {
+    "mtime": 1771408481.8830688,
+    "ast_hash": "2cb1343962067059fedde12e14935a4c",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.UI\\Theming\\ThemeManager.cs": {
+    "mtime": 1770679727.8474638,
+    "ast_hash": "1c15a540735cd6baffd75fa444897dfc",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.UI\\ViewModels\\AsyncRelayCommand.cs": {
+    "mtime": 1770694926.3202963,
+    "ast_hash": "aff194336f95edeeca4e86576d6da47d",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.UI\\ViewModels\\BooleanInverterConverter.cs": {
+    "mtime": 1770594981.9641995,
+    "ast_hash": "4836bd69c6ffeee38e64b056d595160c",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.UI\\ViewModels\\BooleanToVisibilityConverter.cs": {
+    "mtime": 1771408481.8836012,
+    "ast_hash": "b25349351ba9d17879a25e2d7fbe1869",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.UI\\ViewModels\\IconOption.cs": {
+    "mtime": 1771408481.8841448,
+    "ast_hash": "83da643e7acd3b2bc722940c0d94f368",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.UI\\ViewModels\\InverseBooleanToVisibilityConverter.cs": {
+    "mtime": 1770652763.0270467,
+    "ast_hash": "2c50771324888f231cb176f789b38368",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.UI\\ViewModels\\MainViewModel.Card.cs": {
+    "mtime": 1773679618.4916785,
+    "ast_hash": "a3aabf3fb6683d92d38a7e463430cca4",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.UI\\ViewModels\\MainViewModel.cs": {
+    "mtime": 1773679618.4926908,
+    "ast_hash": "be12c7e771fd53064370b49f5c25675f",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.UI\\ViewModels\\ObservableObject.cs": {
+    "mtime": 1770658930.482066,
+    "ast_hash": "a0a885a515a3de4a5736b8264d9acf02",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.UI\\ViewModels\\ProfileCreationWizardViewModel.cs": {
+    "mtime": 1771408481.8852153,
+    "ast_hash": "ff8f911a7e219dd3e1047237f136346a",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.UI\\ViewModels\\ProfileItemViewModel.cs": {
+    "mtime": 1773679618.4926908,
+    "ast_hash": "7253bd480bb1a76a1ee1ed31a1499b75",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.UI\\ViewModels\\RelayCommand.cs": {
+    "mtime": 1770779598.3359249,
+    "ast_hash": "95c4203143f71823f96e7017f6a4bc59",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.UI\\ViewModels\\SettingsViewModel.cs": {
+    "mtime": 1773679618.494691,
+    "ast_hash": "35ddc88ffdd67dd186b99b414f5921af",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.UI\\Views\\CardWindow.xaml.cs": {
+    "mtime": 1773679618.4966917,
+    "ast_hash": "6a931ffee76c9d63d9044fff00dcdd85",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.UI\\Views\\MainWindow.xaml.cs": {
+    "mtime": 1771408481.887343,
+    "ast_hash": "2ee5d36a8ab193337dc09e1fa7f5d653",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.UI\\Views\\ProfileCreationWizard.xaml.cs": {
+    "mtime": 1771408481.887867,
+    "ast_hash": "a980c88883b029d921f5c29f0edb459f",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.UI\\Views\\SettingsWindow.xaml.cs": {
+    "mtime": 1770705206.4683075,
+    "ast_hash": "8d2b4eeae9a4d5ffbf2fd3ffb4ad0f4f",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.UI\\Views\\TabbedWindow.xaml.cs": {
+    "mtime": 1771571072.4315617,
+    "ast_hash": "06f5a5eb0fc5a1976215a9b6f81d189d",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\tests\\WinAppProfiles.Integration\\SqliteAppSettingsRepositoryTests.cs": {
+    "mtime": 1771455855.6336186,
+    "ast_hash": "af3f00b0791e81f67284b31ccc9bf586",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\tests\\WinAppProfiles.Integration\\SqliteProfileRepositoryTests.cs": {
+    "mtime": 1771455817.6988926,
+    "ast_hash": "d76fce75f355e7aa297fe7b6982e6832",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\tests\\WinAppProfiles.Unit\\MainViewModelTests.cs": {
+    "mtime": 1773522255.5545144,
+    "ast_hash": "067e5f83cfb8ce4747e49e9719b6d84b",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\tests\\WinAppProfiles.Unit\\ProfileItemViewModelTests.cs": {
+    "mtime": 1771439838.86344,
+    "ast_hash": "77824644861f60d6ac67e0f864f05a45",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\tests\\WinAppProfiles.Unit\\ProfileServiceTests.cs": {
+    "mtime": 1771455721.332203,
+    "ast_hash": "4eecc6019c288eec4d2ab2b0b95d0304",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\tests\\WinAppProfiles.Unit\\LowPowerWizard\\CoreModelsTests.cs": {
+    "mtime": 1775757932.1586764,
+    "ast_hash": "8ebae87598605975598edc1227c21e81",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\AGENTS.md": {
+    "mtime": 1770569684.085182,
+    "ast_hash": "722efe51fd900696a9e8423a1f86e500",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\CLAUDE.md": {
+    "mtime": 1773679618.4772825,
+    "ast_hash": "99e7901b79179ddc67069209b30ea2d9",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\CONTRIBUTING.md": {
+    "mtime": 1770607677.4651973,
+    "ast_hash": "4f40a7bf44f7e7f55257b275e8802096",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\README.md": {
+    "mtime": 1770725615.7288518,
+    "ast_hash": "61291973678f777e1ec20f695b4bf553",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\USER_GUIDE.md": {
+    "mtime": 1770724592.2825644,
+    "ast_hash": "52118e96a003830465504172e188c7bf",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\commands\\add-feature.md": {
+    "mtime": 1775756696.6721122,
+    "ast_hash": "af1cdfe90e28751a389f5a1e9d8cc9f5",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\commands\\analyze-features.md": {
+    "mtime": 1775756696.6721122,
+    "ast_hash": "b258970b5b473e3cb1f32d424f5f452c",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\commands\\continue-tasks.md": {
+    "mtime": 1775756696.6721122,
+    "ast_hash": "8b5943963c8945d6b648ecd3549c4fc7",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\commands\\reinit.md": {
+    "mtime": 1775756696.6731117,
+    "ast_hash": "28df24f14f48849542d640932245e2d0",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\commands\\review-tasks.md": {
+    "mtime": 1775756696.6731117,
+    "ast_hash": "36f0d72dfcd82093ae72bbf0d4048e25",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\commands\\update-tasks.md": {
+    "mtime": 1775756696.6741118,
+    "ast_hash": "aeb94b67f1bde20751b5797ad99f5419",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\skills\\analyze-features\\SKILL.md": {
+    "mtime": 1775756696.6761117,
+    "ast_hash": "931fe3b5704af4363d3bcc1c60f17f75",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\skills\\base\\SKILL.md": {
+    "mtime": 1775756696.6761117,
+    "ast_hash": "b88648be4dc7ca7cd810a1313dd8b163",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\skills\\code-deduplication\\SKILL.md": {
+    "mtime": 1775756696.6771119,
+    "ast_hash": "18cb76fb0ff14b629c1e59f023ee1508",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\skills\\code-review\\SKILL.md": {
+    "mtime": 1775756696.678112,
+    "ast_hash": "e1c13aa1828746cc55df52ca6daaa2bd",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\skills\\commit-hygiene\\SKILL.md": {
+    "mtime": 1775756696.678112,
+    "ast_hash": "ba7223df5f7634b724c7a01289a80279",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\skills\\continue-tasks\\SKILL.md": {
+    "mtime": 1775756696.679113,
+    "ast_hash": "969c8078619457241096f4ad5381ab95",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\skills\\database-schema\\SKILL.md": {
+    "mtime": 1775756696.6801121,
+    "ast_hash": "9b34ac5da663829917bd38a9d2230e8a",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\skills\\existing-repo\\SKILL.md": {
+    "mtime": 1775756696.6801121,
+    "ast_hash": "ed88d9451e4ad180bc4ca3f6b7c73a74",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\skills\\git-cleanup\\SKILL.md": {
+    "mtime": 1775756696.681112,
+    "ast_hash": "39187c0b07acb7ca6e734f5ad9be86f7",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\skills\\guide-assistant\\SKILL.md": {
+    "mtime": 1775756696.681112,
+    "ast_hash": "7730187cfc692f7beb7044f55b3de6d6",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\skills\\project-manager\\SKILL.md": {
+    "mtime": 1775756696.682113,
+    "ast_hash": "0edd834affa745660c52c53aa37dabf7",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\skills\\reinit\\SKILL.md": {
+    "mtime": 1775756696.682113,
+    "ast_hash": "e3cbb7c59ef600455126a682f96eec91",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\skills\\release-to-main\\SKILL.md": {
+    "mtime": 1775756696.6831124,
+    "ast_hash": "23be605e68cfbfe378d21110e3e0c962",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\skills\\review-tasks\\SKILL.md": {
+    "mtime": 1775756696.6831124,
+    "ast_hash": "29c4c5ddaf5902624faf19682f868ca2",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\skills\\security\\SKILL.md": {
+    "mtime": 1775756696.684112,
+    "ast_hash": "e0159719cd3ea08b5583b1e607c1641c",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\skills\\session-management\\SKILL.md": {
+    "mtime": 1775756696.685112,
+    "ast_hash": "a5bb965179d7b683d441e47418f40174",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\skills\\ship-to-dev\\SKILL.md": {
+    "mtime": 1775756696.685112,
+    "ast_hash": "22bcc0865b546763acadca298bf3da65",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\skills\\start-app\\SKILL.md": {
+    "mtime": 1775756696.6861117,
+    "ast_hash": "c9670a26e214c402c2ba272c08560d5f",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\skills\\update-tasks\\SKILL.md": {
+    "mtime": 1775756696.6861117,
+    "ast_hash": "d63f03db22db6d4a9f16cfff980ac1c7",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\skills\\visual-explainer\\SKILL.md": {
+    "mtime": 1775756696.687145,
+    "ast_hash": "b864ed6fdb743bb821f01bbe7c7a30bf",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.claude\\skills\\workspace\\SKILL.md": {
+    "mtime": 1775756696.68815,
+    "ast_hash": "e08a757d1885047007417d9849f8a004",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.github\\pull_request_template.md": {
+    "mtime": 1770607677.4641976,
+    "ast_hash": "5504aaf32b5d0a0c4966141f963e1808",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\.interface-design\\system.md": {
+    "mtime": 1773679618.4772825,
+    "ast_hash": "c5d3de07d13f46f8ffae420ccd3e38f7",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\assets\\icons\\README.md": {
+    "mtime": 1771408481.8729882,
+    "ast_hash": "350d1d0e2cf07cb32ee9ad8a49eaca37",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\docs\\CONTRIB.md": {
+    "mtime": 1771429750.6524816,
+    "ast_hash": "f395e0f01a7773a4a34c37ff8ee5fdfa",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\docs\\current-solution-analysis.md": {
+    "mtime": 1783103685.6439703,
+    "ast_hash": "0c2153e74e98942008d666e18a2ede43",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\docs\\RUNBOOK.md": {
+    "mtime": 1771429817.912013,
+    "ast_hash": "0edb48ca0564d5353a7e02b051bb9973",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\docs\\features\\low-power-wizard.md": {
+    "mtime": 1775756696.68815,
+    "ast_hash": "056aadf941bf842a42b0100fc486e85e",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\docs\\plans\\2026-03-16-item-settings-panel-redesign.md": {
+    "mtime": 1773679618.4845157,
+    "ast_hash": "d689803b24d3a698d08d3c9e4b175174",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\docs\\plans\\2026-04-09-low-power-wizard-design.md": {
+    "mtime": 1775756696.6891499,
+    "ast_hash": "250acedb0a0afdcec45f05c68824a0b5",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\docs\\plans\\low-power-wizard-plan.md": {
+    "mtime": 1775757815.6739025,
+    "ast_hash": "4e7dd50ba764a96e25f67ad2f9cd0fc2",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\docs\\tasks\\archive\\low-power-wizard-p1-t1.md": {
+    "mtime": 1775758055.8478243,
+    "ast_hash": "74916d6ce675611eb6b2b19c83bb8838",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\src\\WinAppProfiles.Package\\README.md": {
+    "mtime": 1770609149.647121,
+    "ast_hash": "7e7e50c02a28304c0c9d5ab7bbeb6d95",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\_project_specs\\journeys\\_template.md": {
+    "mtime": 1771438062.9484794,
+    "ast_hash": "f18b554dc3fc9092aefa3cf67837d24f",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\_project_specs\\journeys\\common\\create-profile-wizard.md": {
+    "mtime": 1771438219.9129548,
+    "ast_hash": "8d78bd35a9bc6d0c971dfa21b1b616bb",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\_project_specs\\journeys\\common\\discover-and-add-items.md": {
+    "mtime": 1771438170.262666,
+    "ast_hash": "6ddf9859c707cb8c1093abc374ca3500",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\_project_specs\\journeys\\common\\switch-interface.md": {
+    "mtime": 1771438190.6778996,
+    "ast_hash": "ceb488f7f84842e369f8a97b4abc64f3",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\_project_specs\\journeys\\critical\\apply-profile.md": {
+    "mtime": 1771438141.2236657,
+    "ast_hash": "3e7d2d779c2098a72de9219f732bfaf4",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\_project_specs\\journeys\\critical\\first-launch-to-first-apply.md": {
+    "mtime": 1771438102.5696905,
+    "ast_hash": "e238ce9544125c39a6cf15dad70db82a",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\_project_specs\\journeys\\edge-cases\\missing-executable.md": {
+    "mtime": 1771438284.5396783,
+    "ast_hash": "41ee0071c3ea3cecef6f80b99863da06",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\_project_specs\\journeys\\edge-cases\\second-instance-launch.md": {
+    "mtime": 1771438305.4133387,
+    "ast_hash": "c04912744e8e3e2201b330433a0622cb",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\_project_specs\\journeys\\edge-cases\\service-permission-failure.md": {
+    "mtime": 1771438251.6635642,
+    "ast_hash": "9982569dcab99f890d910e011325e444",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\assets\\logo.png": {
+    "mtime": 1770750920.2721965,
+    "ast_hash": "45b121e080d9bab457d761673efa511a",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\assets\\mocks\\card_window.png": {
+    "mtime": 1770773160.91432,
+    "ast_hash": "ae4e920f93060caa98d88f8dce378e4e",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\assets\\mocks\\tabbed_window.png": {
+    "mtime": 1770773183.5491502,
+    "ast_hash": "063d9ae53fa000b110c074af11d97dbd",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\assets\\screenshots\\after_icon_feature.png": {
+    "mtime": 1773415675.9286423,
+    "ast_hash": "d31250683b73a5c638ff4fd290dc9134",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\assets\\screenshots\\card_view.png": {
+    "mtime": 1773679618.4828205,
+    "ast_hash": "a530d310550b5038fd5b90e14b8e70dc",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\assets\\screenshots\\card_view_item_settings.png": {
+    "mtime": 1773679618.4835038,
+    "ast_hash": "156e49a87bafd5df9731d8e1b19af531",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\assets\\screenshots\\card_window.png": {
+    "mtime": 1773415675.932646,
+    "ast_hash": "977438e62c16248f99a02a5513d32e6a",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\assets\\screenshots\\current_state.png": {
+    "mtime": 1773415675.9352129,
+    "ast_hash": "a9395ea7459fb47fd0dfceb0cac2a9db",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\assets\\screenshots\\dark_mode.png": {
+    "mtime": 1770772840.8770738,
+    "ast_hash": "efb8937de1d6c05a7d037730a071d624",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\assets\\screenshots\\error.png": {
+    "mtime": 1770671975.1007407,
+    "ast_hash": "c3eb2486a5cd08da9807dbcd769cf9b1",
+    "semantic_hash": ""
+  },
+  "C:\\development\\WinAppProfiles\\assets\\screenshots\\tabbed_window.png": {
+    "mtime": 1773415675.9382198,
+    "ast_hash": "8b7f8f63d63b32b4ee6ff3aa5965f974",
+    "semantic_hash": ""
+  }
+}

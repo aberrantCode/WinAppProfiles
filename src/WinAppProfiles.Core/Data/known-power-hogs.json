@@ -1,0 +1,122 @@
+[
+  {
+    "processName": "steam",
+    "serviceName": null,
+    "targetType": "Application",
+    "displayName": "Steam Client",
+    "reason": "Background updates, cloud sync, and overlay consume CPU even when idle",
+    "suggestedInclude": true
+  },
+  {
+    "processName": "discord",
+    "serviceName": null,
+    "targetType": "Application",
+    "displayName": "Discord",
+    "reason": "Voice processing, rich presence, and overlay use significant CPU and memory",
+    "suggestedInclude": true
+  },
+  {
+    "processName": "slack",
+    "serviceName": null,
+    "targetType": "Application",
+    "displayName": "Slack",
+    "reason": "Electron-based app with high baseline memory and periodic sync activity",
+    "suggestedInclude": true
+  },
+  {
+    "processName": "teams",
+    "serviceName": null,
+    "targetType": "Application",
+    "displayName": "Microsoft Teams",
+    "reason": "Background sync, notifications, and Electron runtime consume significant resources",
+    "suggestedInclude": true
+  },
+  {
+    "processName": "spotify",
+    "serviceName": null,
+    "targetType": "Application",
+    "displayName": "Spotify",
+    "reason": "Audio streaming, background sync, and Chromium runtime use CPU and memory",
+    "suggestedInclude": true
+  },
+  {
+    "processName": "dropbox",
+    "serviceName": null,
+    "targetType": "Application",
+    "displayName": "Dropbox",
+    "reason": "Continuous file monitoring and cloud sync cause disk I/O and CPU usage",
+    "suggestedInclude": true
+  },
+  {
+    "processName": "onedrive",
+    "serviceName": null,
+    "targetType": "Application",
+    "displayName": "Microsoft OneDrive",
+    "reason": "File sync and monitoring consume CPU, memory, and network bandwidth",
+    "suggestedInclude": true
+  },
+  {
+    "processName": "node",
+    "serviceName": null,
+    "targetType": "Application",
+    "displayName": "Node.js",
+    "reason": "Development servers and watchers can consume high CPU during compilation",
+    "suggestedInclude": false
+  },
+  {
+    "processName": "adobenotificationclient",
+    "serviceName": null,
+    "targetType": "Application",
+    "displayName": "Adobe Notification Client",
+    "reason": "Background Adobe Creative Cloud agent polling for updates",
+    "suggestedInclude": true
+  },
+  {
+    "processName": "cccmainfn",
+    "serviceName": null,
+    "targetType": "Application",
+    "displayName": "AMD Catalyst Control Center",
+    "reason": "GPU management utility runs background monitoring even when not in use",
+    "suggestedInclude": true
+  },
+  {
+    "processName": null,
+    "serviceName": "WSearch",
+    "targetType": "Service",
+    "displayName": "Windows Search (Indexer)",
+    "reason": "Continuous disk I/O for file indexing drains battery",
+    "suggestedInclude": true
+  },
+  {
+    "processName": null,
+    "serviceName": "SysMain",
+    "targetType": "Service",
+    "displayName": "SysMain (Superfetch)",
+    "reason": "Preloads frequently used apps into memory, causing disk I/O spikes",
+    "suggestedInclude": true
+  },
+  {
+    "processName": null,
+    "serviceName": "DiagTrack",
+    "targetType": "Service",
+    "displayName": "Connected User Experiences and Telemetry",
+    "reason": "Collects and transmits diagnostic data, using CPU and network",
+    "suggestedInclude": true
+  },
+  {
+    "processName": null,
+    "serviceName": "WMPNetworkSvc",
+    "targetType": "Service",
+    "displayName": "Windows Media Player Network Sharing",
+    "reason": "Network discovery and media sharing service runs unnecessarily on battery",
+    "suggestedInclude": true
+  },
+  {
+    "processName": null,
+    "serviceName": "TabletInputService",
+    "targetType": "Service",
+    "displayName": "Touch Keyboard and Handwriting Panel",
+    "reason": "Pen and touch input service consumes resources on non-tablet devices",
+    "suggestedInclude": true
+  }
+]
