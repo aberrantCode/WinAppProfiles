@@ -64,7 +64,7 @@ Generated: 2026-07-03
 ## Incomplete Functionality
 
 - [ ] Implement `WindowsPowerAnalysisService`.
-  - Planned in `docs/features/low-power-wizard.md` and `docs/plans/low-power-wizard-plan.md`.
+  - Planned in `docs/features/profile-management--low-power-wizard.md` and `docs/plans/low-power-wizard-plan.md`.
   - Missing from `src/WinAppProfiles.Infrastructure`.
   - `IPowerAnalysisService` is not registered in DI.
   - CPU sampling, memory threshold detection, known-hogs matching, result ranking, and progress reporting are not implemented.
