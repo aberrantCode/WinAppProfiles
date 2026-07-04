@@ -1,4 +1,5 @@
 using Dapper;
+using Microsoft.Data.Sqlite;
 
 namespace WinAppProfiles.Infrastructure.Data;
 
@@ -72,8 +73,14 @@ public sealed class DbInitializer
         };
         foreach (var migration in migrations)
         {
-            try { await connection.ExecuteAsync(migration); }
-            catch { /* column already exists – ignore */ }
+            try
+            {
+                await connection.ExecuteAsync(migration);
+            }
+            catch (SqliteException ex) when (ex.Message.Contains("duplicate column name", StringComparison.OrdinalIgnoreCase))
+            {
+                // Column already exists from a prior run – expected, ignore.
+            }
         }
     }
 }

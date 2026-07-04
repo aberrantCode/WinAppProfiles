@@ -40,8 +40,7 @@ public sealed class StartupTaskRegistrar
                 return false;
             }
 
-            process.WaitForExit();
-            return process.ExitCode == 0;
+            return WaitForSchtasks(process);
         }
         catch
         {
@@ -65,8 +64,9 @@ public sealed class StartupTaskRegistrar
                     return false;
                 }
 
-                queryProcess.WaitForExit();
-                if (queryProcess.ExitCode != 0)
+                // Query succeeding (exit 0) means the task exists; a non-zero exit means
+                // it's already absent, which is the desired end state.
+                if (!WaitForSchtasks(queryProcess))
                 {
                     return true;
                 }
@@ -78,13 +78,23 @@ public sealed class StartupTaskRegistrar
                 return false;
             }
 
-            deleteProcess.WaitForExit();
-            return deleteProcess.ExitCode == 0;
+            return WaitForSchtasks(deleteProcess);
         }
         catch
         {
             return false;
         }
+    }
+
+    private static bool WaitForSchtasks(Process process)
+    {
+        // Drain both redirected streams before waiting so a full pipe buffer can't
+        // deadlock the child process against WaitForExit.
+        var standardOutput = process.StandardOutput.ReadToEndAsync();
+        var standardError = process.StandardError.ReadToEndAsync();
+        process.WaitForExit();
+        Task.WaitAll(standardOutput, standardError);
+        return process.ExitCode == 0;
     }
 
     private static string? GetCurrentProcessPath()

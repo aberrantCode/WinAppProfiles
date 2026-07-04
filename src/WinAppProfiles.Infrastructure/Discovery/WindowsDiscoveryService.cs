@@ -18,20 +18,31 @@ public sealed class WindowsDiscoveryService : IDiscoveryService
 
     public Task<IReadOnlyList<ProfileItem>> ScanServicesAsync(CancellationToken cancellationToken = default)
     {
-        var services = System.ServiceProcess.ServiceController.GetServices()
-            .Select(s => new ProfileItem
-            {
-                Id = Guid.NewGuid(),
-                TargetType = TargetType.Service,
-                DisplayName = s.DisplayName,
-                ServiceName = s.ServiceName,
-                DesiredState = DesiredState.Ignore,
-                IsReviewed = false
-            })
-            .OrderBy(s => s.DisplayName)
-            .ToList();
+        var controllers = System.ServiceProcess.ServiceController.GetServices();
+        try
+        {
+            var services = controllers
+                .Select(s => new ProfileItem
+                {
+                    Id = Guid.NewGuid(),
+                    TargetType = TargetType.Service,
+                    DisplayName = s.DisplayName,
+                    ServiceName = s.ServiceName,
+                    DesiredState = DesiredState.Ignore,
+                    IsReviewed = false
+                })
+                .OrderBy(s => s.DisplayName)
+                .ToList();
 
-        return Task.FromResult<IReadOnlyList<ProfileItem>>(services);
+            return Task.FromResult<IReadOnlyList<ProfileItem>>(services);
+        }
+        finally
+        {
+            foreach (var controller in controllers)
+            {
+                controller.Dispose();
+            }
+        }
     }
 
     private static void ReadUninstallHive(RegistryKey root, string subKeyPath, IDictionary<string, ProfileItem> results)

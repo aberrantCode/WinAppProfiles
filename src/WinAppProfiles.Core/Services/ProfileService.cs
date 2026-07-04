@@ -47,6 +47,8 @@ public sealed class ProfileService : IProfileService
 
         foreach (var item in profile.Items)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (item.DesiredState == DesiredState.Ignore)
             {
                 continue;
@@ -89,6 +91,11 @@ public sealed class ProfileService : IProfileService
                 {
                     result.Success = false;
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                // Cancellation is not an item failure — propagate it and stop applying.
+                throw;
             }
             catch (Exception ex)
             {

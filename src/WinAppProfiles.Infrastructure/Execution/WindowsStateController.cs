@@ -26,47 +26,120 @@ public sealed class WindowsStateController : IStateController
 
         try
         {
-            var processes = Process.GetProcessesByName(target.ProcessName);
+            cancellationToken.ThrowIfCancellationRequested();
 
-            if (desiredState == DesiredState.Stopped)
+            var expectedPath = ExpandExecutablePath(target.ExecutablePath);
+            var processes = Process.GetProcessesByName(target.ProcessName);
+            try
             {
-                foreach (var process in processes)
+                if (desiredState == DesiredState.Stopped)
                 {
-                    process.Kill(true);
+                    // Only stop processes whose image matches the target executable path
+                    // (when one is known), so we don't kill unrelated apps that merely share
+                    // the same process name. Processes whose module we can't inspect are skipped.
+                    var targeted = processes.Where(p => MatchesExecutablePath(p, expectedPath)).ToList();
+                    var failures = 0;
+                    foreach (var process in targeted)
+                    {
+                        try
+                        {
+                            process.Kill(true);
+                            process.WaitForExit(5000);
+                        }
+                        catch (Exception ex)
+                        {
+                            failures++;
+                            _logger.LogWarning(ex, "Failed to stop process '{ProcessName}'.", target.ProcessName);
+                        }
+                    }
+
+                    return failures == 0
+                        ? (true, DesiredState.Stopped, null, null)
+                        : (false, DesiredState.Running, "PROCESS_ERROR", $"Failed to stop {failures} process(es) named '{target.ProcessName}'.");
                 }
 
-                return (true, DesiredState.Stopped, null, null);
-            }
-
-            if (desiredState == DesiredState.Running)
-            {
-                if (processes.Length > 0)
+                if (desiredState == DesiredState.Running)
                 {
+                    if (processes.Any(p => MatchesExecutablePath(p, expectedPath)))
+                    {
+                        return (true, DesiredState.Running, null, null);
+                    }
+
+                    if (string.IsNullOrWhiteSpace(target.ExecutablePath) || !File.Exists(target.ExecutablePath))
+                    {
+                        return (false, null, "MISSING_EXECUTABLE", "Executable path is not available.");
+                    }
+
+                    using (Process.Start(new ProcessStartInfo
+                    {
+                        FileName = target.ExecutablePath,
+                        UseShellExecute = true,
+                        WindowStyle = target.ForceMinimizedOnStart ? ProcessWindowStyle.Minimized : ProcessWindowStyle.Normal
+                    }))
+                    {
+                    }
+
+                    var delayMs = target.StartupDelaySeconds > 0 ? target.StartupDelaySeconds * 1000 : 250;
+                    await Task.Delay(delayMs, cancellationToken);
                     return (true, DesiredState.Running, null, null);
                 }
 
-                if (string.IsNullOrWhiteSpace(target.ExecutablePath) || !File.Exists(target.ExecutablePath))
-                {
-                    return (false, null, "MISSING_EXECUTABLE", "Executable path is not available.");
-                }
-
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = target.ExecutablePath,
-                    UseShellExecute = true,
-                    WindowStyle = target.ForceMinimizedOnStart ? ProcessWindowStyle.Minimized : ProcessWindowStyle.Normal
-                });
-
-                var delayMs = target.StartupDelaySeconds > 0 ? target.StartupDelaySeconds * 1000 : 250;
-                await Task.Delay(delayMs, cancellationToken);
-                return (true, DesiredState.Running, null, null);
+                return (true, null, null, null);
             }
-
-            return (true, null, null, null);
+            finally
+            {
+                foreach (var process in processes)
+                {
+                    process.Dispose();
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
             return (false, null, "PROCESS_ERROR", ex.Message);
+        }
+    }
+
+    private static string? ExpandExecutablePath(string? executablePath)
+    {
+        if (string.IsNullOrWhiteSpace(executablePath))
+        {
+            return null;
+        }
+
+        try
+        {
+            return Path.GetFullPath(Environment.ExpandEnvironmentVariables(executablePath));
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static bool MatchesExecutablePath(Process process, string? expectedFullPath)
+    {
+        // No known path to disambiguate by → match on process name alone (legacy behavior).
+        if (string.IsNullOrWhiteSpace(expectedFullPath))
+        {
+            return true;
+        }
+
+        try
+        {
+            var actualPath = process.MainModule?.FileName;
+            return actualPath is not null &&
+                   string.Equals(Path.GetFullPath(actualPath), expectedFullPath, StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            // Can't read the module (access denied / bitness mismatch) → can't confirm identity,
+            // so don't treat it as a match. Avoids collateral damage to unrelated processes.
+            return false;
         }
     }
 
@@ -82,17 +155,26 @@ public sealed class WindowsStateController : IStateController
 
         try
         {
+            cancellationToken.ThrowIfCancellationRequested();
             using var controller = new ServiceController(target.ServiceName);
 
             if (desiredState == DesiredState.Stopped)
             {
-                if (controller.Status != ServiceControllerStatus.Stopped && controller.CanStop)
+                if (controller.Status != ServiceControllerStatus.Stopped)
                 {
+                    if (!controller.CanStop)
+                    {
+                        return (false, DesiredState.Running, "SERVICE_CANNOT_STOP", $"Service '{target.ServiceName}' cannot be stopped.");
+                    }
+
                     controller.Stop();
                     controller.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(15));
                 }
 
-                return (true, DesiredState.Stopped, null, null);
+                controller.Refresh();
+                return controller.Status == ServiceControllerStatus.Stopped
+                    ? (true, DesiredState.Stopped, null, null)
+                    : (false, DesiredState.Running, "SERVICE_ERROR", $"Service '{target.ServiceName}' did not reach the Stopped state.");
             }
 
             if (desiredState == DesiredState.Running)
@@ -103,11 +185,18 @@ public sealed class WindowsStateController : IStateController
                     controller.WaitForStatus(ServiceControllerStatus.Running, TimeSpan.FromSeconds(15));
                 }
 
-                return (true, DesiredState.Running, null, null);
+                controller.Refresh();
+                return controller.Status == ServiceControllerStatus.Running
+                    ? (true, DesiredState.Running, null, null)
+                    : (false, DesiredState.Stopped, "SERVICE_ERROR", $"Service '{target.ServiceName}' did not reach the Running state.");
             }
 
             await Task.CompletedTask;
             return (true, null, null, null);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
@@ -125,9 +214,19 @@ public sealed class WindowsStateController : IStateController
 
         await Task.CompletedTask; // Make it async
         var processes = Process.GetProcessesByName(target.ProcessName);
-        var state = processes.Length > 0 ? "Running" : "Not Running";
-        _logger.LogInformation("GetCurrentProcessStateAsync: Process '{ProcessName}' current state: {State}", target.ProcessName, state);
-        return (state, true);
+        try
+        {
+            var state = processes.Length > 0 ? "Running" : "Not Running";
+            _logger.LogInformation("GetCurrentProcessStateAsync: Process '{ProcessName}' current state: {State}", target.ProcessName, state);
+            return (state, true);
+        }
+        finally
+        {
+            foreach (var process in processes)
+            {
+                process.Dispose();
+            }
+        }
     }
 
     public async Task<(string State, bool Success)> GetCurrentServiceStateAsync(ServiceTarget target, CancellationToken cancellationToken = default)
