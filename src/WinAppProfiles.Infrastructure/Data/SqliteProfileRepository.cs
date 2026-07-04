@@ -25,28 +25,41 @@ public sealed class SqliteProfileRepository : IProfileRepository
         profile.UpdatedAt = profile.CreatedAt;
 
         using var connection = _connectionFactory.CreateConnection();
+        using var transaction = connection.BeginTransaction();
         _logger.LogInformation("Creating profile '{ProfileName}' ({ProfileId}). Inserting {ItemCount} items.", profile.Name, profile.Id, profile.Items.Count);
 
-        await connection.ExecuteAsync(
-            """
-            INSERT INTO profiles (id, name, is_default, created_at, updated_at)
-            VALUES (@Id, @Name, @IsDefault, @CreatedAt, @UpdatedAt);
-            """,
-            new
-            {
-                Id = profile.Id.ToString(),
-                profile.Name,
-                profile.IsDefault,
-                profile.CreatedAt,
-                profile.UpdatedAt
-            });
-
-        foreach (var item in profile.Items)
+        try
         {
-            item.Id = item.Id == Guid.Empty ? Guid.NewGuid() : item.Id;
-            item.ProfileId = profile.Id;
-            _logger.LogInformation("  Inserting item: {ProfileItemId}, DisplayName: '{DisplayName}'", item.Id, item.DisplayName);
-            await InsertProfileItemAsync(connection, item);
+            await connection.ExecuteAsync(
+                """
+                INSERT INTO profiles (id, name, is_default, created_at, updated_at)
+                VALUES (@Id, @Name, @IsDefault, @CreatedAt, @UpdatedAt);
+                """,
+                new
+                {
+                    Id = profile.Id.ToString(),
+                    profile.Name,
+                    profile.IsDefault,
+                    profile.CreatedAt,
+                    profile.UpdatedAt
+                },
+                transaction);
+
+            foreach (var item in profile.Items)
+            {
+                item.Id = item.Id == Guid.Empty ? Guid.NewGuid() : item.Id;
+                item.ProfileId = profile.Id;
+                _logger.LogInformation("  Inserting item: {ProfileItemId}, DisplayName: '{DisplayName}'", item.Id, item.DisplayName);
+                await InsertProfileItemAsync(connection, item, transaction);
+            }
+
+            transaction.Commit();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create profile '{ProfileName}' ({ProfileId}); rolling back.", profile.Name, profile.Id);
+            transaction.Rollback();
+            throw;
         }
 
         return profile;
@@ -57,26 +70,40 @@ public sealed class SqliteProfileRepository : IProfileRepository
         profile.UpdatedAt = DateTimeOffset.UtcNow;
 
         using var connection = _connectionFactory.CreateConnection();
+        using var transaction = connection.BeginTransaction();
         _logger.LogInformation("Updating profile '{ProfileName}' ({ProfileId}). Deleting existing items for profile.", profile.Name, profile.Id);
-        await connection.ExecuteAsync(
-            "UPDATE profiles SET name = @Name, is_default = @IsDefault, updated_at = @UpdatedAt WHERE id = @Id;",
-            new
-            {
-                Id = profile.Id.ToString(),
-                profile.Name,
-                profile.IsDefault,
-                profile.UpdatedAt
-            });
 
-        await connection.ExecuteAsync("DELETE FROM profile_items WHERE profile_id = @ProfileId;", new { ProfileId = profile.Id.ToString() });
-
-        _logger.LogInformation("Updating profile '{ProfileName}' ({ProfileId}). Re-inserting {ItemCount} items.", profile.Name, profile.Id, profile.Items.Count);
-        foreach (var item in profile.Items)
+        try
         {
-            item.Id = item.Id == Guid.Empty ? Guid.NewGuid() : item.Id;
-            item.ProfileId = profile.Id;
-            _logger.LogInformation("  Re-inserting item: {ProfileItemId}, DisplayName: '{DisplayName}'", item.Id, item.DisplayName);
-            await InsertProfileItemAsync(connection, item);
+            await connection.ExecuteAsync(
+                "UPDATE profiles SET name = @Name, is_default = @IsDefault, updated_at = @UpdatedAt WHERE id = @Id;",
+                new
+                {
+                    Id = profile.Id.ToString(),
+                    profile.Name,
+                    profile.IsDefault,
+                    profile.UpdatedAt
+                },
+                transaction);
+
+            await connection.ExecuteAsync("DELETE FROM profile_items WHERE profile_id = @ProfileId;", new { ProfileId = profile.Id.ToString() }, transaction);
+
+            _logger.LogInformation("Updating profile '{ProfileName}' ({ProfileId}). Re-inserting {ItemCount} items.", profile.Name, profile.Id, profile.Items.Count);
+            foreach (var item in profile.Items)
+            {
+                item.Id = item.Id == Guid.Empty ? Guid.NewGuid() : item.Id;
+                item.ProfileId = profile.Id;
+                _logger.LogInformation("  Re-inserting item: {ProfileItemId}, DisplayName: '{DisplayName}'", item.Id, item.DisplayName);
+                await InsertProfileItemAsync(connection, item, transaction);
+            }
+
+            transaction.Commit();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update profile '{ProfileName}' ({ProfileId}); rolling back (existing items preserved).", profile.Name, profile.Id);
+            transaction.Rollback();
+            throw;
         }
 
         return profile;
@@ -231,14 +258,27 @@ public sealed class SqliteProfileRepository : IProfileRepository
     public async Task DeleteProfileAsync(Guid profileId, CancellationToken cancellationToken = default)
     {
         using var connection = _connectionFactory.CreateConnection();
-        await connection.ExecuteAsync(
-            "DELETE FROM profile_items WHERE profile_id = @Id;", new { Id = profileId.ToString() });
-        await connection.ExecuteAsync(
-            "DELETE FROM profiles WHERE id = @Id;", new { Id = profileId.ToString() });
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            await connection.ExecuteAsync(
+                "DELETE FROM profile_items WHERE profile_id = @Id;", new { Id = profileId.ToString() }, transaction);
+            await connection.ExecuteAsync(
+                "DELETE FROM profiles WHERE id = @Id;", new { Id = profileId.ToString() }, transaction);
+            transaction.Commit();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete profile {ProfileId}; rolling back.", profileId);
+            transaction.Rollback();
+            throw;
+        }
+
         _logger.LogInformation("Deleted profile {ProfileId}.", profileId);
     }
 
-    private static Task<int> InsertProfileItemAsync(System.Data.IDbConnection connection, ProfileItem item)
+    private static Task<int> InsertProfileItemAsync(System.Data.IDbConnection connection, ProfileItem item, System.Data.IDbTransaction transaction)
     {
         return connection.ExecuteAsync(
             """
@@ -265,7 +305,8 @@ public sealed class SqliteProfileRepository : IProfileRepository
                 ForceMinimizedOnStart = item.ForceMinimizedOnStart ? 1 : 0,
                 item.CustomIconPath,
                 item.IconIndex
-            });
+            },
+            transaction);
     }
 
     private static Profile MapProfile(ProfileRow row)
