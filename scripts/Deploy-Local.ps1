@@ -57,9 +57,10 @@ Write-Host "Runtime     : $Runtime  SelfContained=$SelfContained  Config=$Config
 Write-Step 'Stopping any running instance'
 $procs = Get-Process -Name 'WinAppProfiles.UI' -ErrorAction SilentlyContinue
 if ($procs) {
+    $count = @($procs).Count   # @() so a single-instance scalar still has .Count under StrictMode
     $procs | Stop-Process -Force
     Start-Sleep -Milliseconds 800   # let the single-instance mutex release
-    Write-Host "Stopped $($procs.Count) running instance(s)."
+    Write-Host "Stopped $count running instance(s)."
 } else {
     Write-Host 'No running instance.'
 }
