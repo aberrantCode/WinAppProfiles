@@ -5,4 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
+  <!-- Product version — keep in sync with the latest release tag (see /release-to-main). -->
+  <PropertyGroup>
+    <Version>0.4.1</Version>
+  </PropertyGroup>
 </Project>
