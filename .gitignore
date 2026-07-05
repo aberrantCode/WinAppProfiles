@@ -17,3 +17,6 @@ logs/
 src/WinAppProfiles.Package/AppPackages/
 *_wpftmp.csproj
 nul
+
+# Generated knowledge-graph artifacts (regenerable via /graphify)
+graphify-out/

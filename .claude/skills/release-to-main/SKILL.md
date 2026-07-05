@@ -11,14 +11,96 @@ Run this when `dev` is stable and ready to ship.
 
 ---
 
-## Prerequisites: Ensure Both Branches Exist on Remote
+## Prerequisites: Detect the production branch and target repo
+
+This skill says `main` throughout for readability, but the production branch may be
+named differently (`master`, `release`, …). **Detect it from the remote — never
+assume.** Likewise, derive the GitHub repo from `origin`, so a fork that also has an
+`upstream` remote never targets the wrong repository.
 
 ```bash
-git ls-remote --heads origin main
+git fetch origin --prune
+
+# Production branch: read origin/HEAD; refresh it, then probe as a last resort.
+PROD=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||')
+if [ -z "$PROD" ]; then
+  git remote set-head origin -a >/dev/null 2>&1
+  PROD=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||')
+fi
+if [ -z "$PROD" ]; then
+  for cand in main master; do
+    git ls-remote --heads origin "$cand" | grep -q . && PROD="$cand" && break
+  done
+fi
+
+# Target repo: always derive from origin. NEVER bare `gh repo view` — for a fork with
+# an `upstream` remote it resolves to the UPSTREAM parent, so the release would tag and
+# publish against the wrong repository. Handing gh the origin URL pins it to the fork.
+REPO=$(gh repo view "$(git remote get-url origin)" --json nameWithOwner -q .nameWithOwner 2>/dev/null) \
+  || REPO=$(git remote get-url origin | sed -E 's#.*github.com[:/]##; s#\.git$##')
+
+echo "Production branch: $PROD"
+echo "Target repo:       $REPO"
+
+git ls-remote --heads origin "$PROD"
 git ls-remote --heads origin dev
 ```
 
-If either is missing, stop and tell the user — do not create them automatically.
+If `$PROD` or `$REPO` cannot be resolved, or either branch is missing on the remote,
+stop and tell the user — do not create or guess them.
+
+### Rename gate: prefer `main` over `master` — before any other action
+
+If the production branch is `master`, **stop and offer to rename it to `main` first**.
+This is the preferred convention; do the rename before assessing state, versioning, or
+merging — nothing else happens until this is resolved.
+
+```bash
+if [ "$PROD" = "master" ]; then
+  echo "Production branch is 'master'. The preferred convention is 'main'."
+fi
+```
+
+When `$PROD` is `master`, ask via **AskUserQuestion** (this gate runs first, ahead of Step 1):
+
+```
+AskUserQuestion(
+  questions: [{
+    question: "This repo's production branch is 'master'. Rename it to 'main' before releasing?",
+    header: "Rename branch",
+    options: [
+      { label: "Yes — rename master → main", description: "GitHub-side atomic rename: moves the default branch, retargets open PRs, adds redirects. Then continue the release into main." },
+      { label: "No — release into master", description: "Keep master as the production branch for this release." }
+    ]
+  }]
+)
+```
+
+- **Yes** — perform the rename via GitHub's branch-rename API (atomic: moves the
+  default-branch pointer, retargets open PRs, sets up redirects), then resync locally and
+  set `PROD=main`:
+
+  ```bash
+  gh api -X POST "repos/$REPO/branches/master/rename" -f new_name=main \
+    --jq '{name: .name}'
+
+  git branch -m master main 2>/dev/null || true   # rename local branch if present
+  git fetch origin --prune
+  git branch -u origin/main main 2>/dev/null || true
+  git remote set-head origin -a >/dev/null 2>&1
+  PROD=main
+  echo "Renamed. Production branch is now: $PROD"
+  ```
+
+  If `master` is a protected branch, the rename API still works and carries the
+  protection rule to `main`; no manual reprotection is needed.
+
+- **No** — keep `PROD=master` and continue. Every `main` reference below means `master`.
+
+### Substitution convention
+
+**For the rest of this skill, every `main` / `origin/main` means `$PROD` / `origin/$PROD`,
+and every `gh … --repo` uses the `$REPO` resolved here — not `gh repo view` auto-detection.**
 
 ---
 
@@ -262,16 +344,22 @@ Then **publish a GitHub Release** from the tag. This is required for any repo us
 `/releases/latest` API (e.g. install.ps1 remote installers). A bare git tag is NOT
 sufficient — the API returns 404 until a Release is published.
 
-**Guard: detect the GitHub repo explicitly** — never rely on `gh` auto-detection, which can fail with exit 128 when the remote URL format doesn't match expectations.
+**Guard: reuse the `$REPO` resolved in Prerequisites** — derived from `origin`, never
+bare `gh repo view` (which targets a fork's `upstream` parent and can also fail with
+exit 128 on unusual remote URLs). Re-derive only if `$REPO` was lost between Bash
+invocations:
 
 ```bash
-REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner 2>/dev/null)
 if [ -z "$REPO" ]; then
-  echo "ERROR: Could not detect GitHub repo from 'gh repo view'."
+  REPO=$(gh repo view "$(git remote get-url origin)" --json nameWithOwner -q .nameWithOwner 2>/dev/null) \
+    || REPO=$(git remote get-url origin | sed -E 's#.*github.com[:/]##; s#\.git$##')
+fi
+if [ -z "$REPO" ]; then
+  echo "ERROR: Could not resolve GitHub repo from origin."
   echo "Check: gh auth status && git remote -v"
   # STOP — do not proceed with gh commands
 fi
-echo "GitHub repo: $REPO"
+echo "GitHub repo (from origin): $REPO"
 ```
 
 Summarise commits since the previous tag to generate release notes. **Guard: only use a git range when the previous tag resolves as a real git object** — using a fake tag string (e.g. `v0.0.0` that was never actually tagged) causes `git log` to fail with exit 128, and `2>/dev/null` would silently produce empty notes.
@@ -353,7 +441,8 @@ Report: PR complete, version tagged, dev synced.
 ## Quick Reference
 
 ```
-1. Ensure main and dev exist on remote
+0. Detect $PROD (from origin/HEAD) and $REPO (from origin); if $PROD=master, AskUserQuestion to rename → main
+1. Ensure $PROD and dev exist on remote
 2. git fetch origin — check BEHIND / AHEAD counts
 3. [if BEHIND > 0] Rebase dev onto main + force-push dev
 4. Determine next version from conventional commits
@@ -377,11 +466,10 @@ Report: PR complete, version tagged, dev synced.
 | Local main diverged from origin/main | **STOP** — do not merge; report to user and abort |
 | Push to main rejected | `git pull --rebase origin main` then retry — never force-push main |
 | Tag already exists | Guard in Step 6 catches this — use AskUserQuestion: pick a different version or abort |
-| `gh repo view` returns empty (`REPO` unset) | **STOP** — run `gh auth status` and `git remote -v` to diagnose; do not run any `gh` commands without `$REPO` |
+| `$REPO` unset / origin not resolvable | **STOP** — `$REPO` is derived from `origin` (never bare `gh repo view`, which targets a fork's upstream parent). Run `gh auth status` and `git remote -v` to diagnose; do not run any `gh` commands without `$REPO` |
+| Repo is a fork with an `upstream` remote | Correct behaviour: `$REPO` from `origin` targets the fork. Bare `gh repo view` would have targeted the upstream parent. Expect version-tag collisions with upstream — normal for a fork |
+| Production branch is `master`, not `main` | Prerequisites' rename gate offers to rename `master` → `main` via the GitHub API before any other action. If declined, `$PROD=master` and every `main` in this skill means `master` |
+| Production branch detection failed (`$PROD` empty) | `origin/HEAD` was unset and main/master probing found nothing. Run `git remote set-head origin -a`, or set `$PROD` manually, then re-run |
 | `gh` not authenticated | `gh auth login` — pause until authenticated |
 | Release notes empty after `git log` | Fallback message already set — check git log manually; do not suppress with `2>/dev/null` in note generation |
 | dev ahead count wrong after rebase | Re-run `git fetch origin` and recount before proceeding |
-
-## Diagram
-
-[View diagram](diagram.html)

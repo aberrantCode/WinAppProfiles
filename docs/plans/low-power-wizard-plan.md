@@ -1,7 +1,7 @@
 ---
 feature: Low Power Wizard
 slug: low-power-wizard
-spec: docs/features/low-power-wizard.md
+spec: docs/features/profile-management--low-power-wizard.md
 status: in-progress
 failures: 0
 created: 2026-04-09

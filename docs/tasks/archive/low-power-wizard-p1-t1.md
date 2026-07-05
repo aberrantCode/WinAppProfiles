@@ -170,7 +170,7 @@ Completed tasks in this phase so far: none
 - `src/WinAppProfiles.Core/Abstractions/IDiscoveryService.cs` — existing service interface, reference for interface patterns
 - `src/WinAppProfiles.Core/WinAppProfiles.Core.csproj` — add embedded resource here
 - `tests/WinAppProfiles.Unit/` — existing test project, add new test files here
-- `docs/features/low-power-wizard.md` — feature spec
+- `docs/features/profile-management--low-power-wizard.md` — feature spec (moved from `docs/features/low-power-wizard.md` on 2026-07-04)
 - `docs/plans/2026-04-09-low-power-wizard-design.md` — full design document
 
 ### Constraints
